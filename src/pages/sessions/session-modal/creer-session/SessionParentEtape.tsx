@@ -6,13 +6,13 @@ import { Modal } from "../../../../components/Modal";
 import { createSession } from "../../../../contracts/sessions";
 import { URL_API_BASE } from "../../../../utils/api";
 import { useNavigate } from "react-router-dom";
+import Alert from "@mui/material/Alert";
 
 type Props = {
     onClose: () => void;
-    fetchSessions: () => Promise<void>;
 };
 
-export default function SessionParentEtape({onClose, fetchSessions}: Props) {
+export default function SessionParentEtape({onClose}: Props) {
     const [etape, setEtape] = useState(1);
 
     // Données globales
@@ -20,6 +20,9 @@ export default function SessionParentEtape({onClose, fetchSessions}: Props) {
     const [date, setDate] = useState('');
     const [bordereau, setBordereau] = useState(null);
     const [fichier, setFichier] = useState<File | null>(null);
+
+    // Gestions des erreurs
+    const [erreur, setErreur] = useState<string | null>(null);
 
     const [sessionId, setSessionId] = useState<number | null>(null);
 
@@ -35,6 +38,7 @@ export default function SessionParentEtape({onClose, fetchSessions}: Props) {
 
         if (response.status !== 200 || !response.data) {
             console.error("Erreur lors de la création de la session :", response.error || "Inconnue");
+            setErreur(response.error || "Inconnue");
             return;
         }
 
@@ -92,6 +96,12 @@ export default function SessionParentEtape({onClose, fetchSessions}: Props) {
                         setFichier={setFichier}
                         onValidate={handleUploadFile}
                     />
+                )}
+
+                {erreur && (
+                    <Alert severity="error">
+                        {erreur}
+                    </Alert>
                 )}
             </Modal>
         </>

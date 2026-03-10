@@ -11,6 +11,7 @@ import { DeleteForever, Settings } from "@mui/icons-material";
 import { grey } from "@mui/material/colors";
 import ModalModificationSession from "./session-modal/modifier-session/ModalModificationSession";
 import ModalSuppressionSession from "./session-modal/supprimer-session/ModalSuppressionSession";
+import ModalArchivageSession from "./session-modal/archiver-session/ModalArchivageSession";
 
 type CouleurStatut = { [key in SessionsStatut]: [string, string, React.ElementType] };
 
@@ -133,7 +134,7 @@ export function CarteDeSession({id, annee, nom, nombreStatut, fetchSessions}: Pr
                 />
             )}
             {activeModal && activeModal.type === "archivageSession" && (
-                <ModalModificationSession 
+                <ModalArchivageSession 
                 session={{
                     id: activeModal.sessionId, 
                     nom: activeModal.sessionName, 

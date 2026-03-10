@@ -23,7 +23,7 @@ export default function ComposantSessionPleine({listeSessions, fetchSessions}: P
 
     return (
         <>
-            <Stack alignItems="center" flexDirection={'row'} divider={<Divider orientation="vertical" flexItem />} gap={6} justifyItems={"center"} mx={1}>
+            <Stack height="100%" alignItems="center" flexDirection={'row'} divider={<Divider orientation="vertical" flexItem />} gap={6} justifyItems={"center"} mx={1}>
 
                 <Stack gap={4} flexDirection={'column'} width="80%">
                     <Stack flexDirection={'column'} alignItems="start">
@@ -35,7 +35,13 @@ export default function ComposantSessionPleine({listeSessions, fetchSessions}: P
                         </Typography>
                     </Stack>
 
-                    <Stack gap={1} flexDirection={'column'} width={'100%'}>
+                    <Stack
+                        gap={1}
+                        flexDirection="column"
+                        width="100%"
+                        marginBottom={2}
+                        sx={{ overflowY: "auto", overflowX: "hidden" }}
+                    >
                         {listeSessions.map((session) => (
                             <CarteDeSession
                                 key={session.id}
@@ -71,7 +77,7 @@ export default function ComposantSessionPleine({listeSessions, fetchSessions}: P
             </Stack>
 
             {modalOpen && (
-                <SessionParentEtape onClose={() => setModalOpen(false)} fetchSessions={fetchSessions} />
+                <SessionParentEtape onClose={() => setModalOpen(false)} />
             )}
         </>
     );
