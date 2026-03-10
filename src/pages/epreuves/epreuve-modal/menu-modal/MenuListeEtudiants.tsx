@@ -4,7 +4,7 @@ import { useEffect, useState, type JSX } from 'react';
 import { frFR } from '@mui/x-data-grid/locales';
 
 import { getColumns } from './composantsListe/colonnesListe';
-import { FormControl, InputLabel, MenuItem, Select, Snackbar, Stack } from '@mui/material';
+import { Snackbar, Stack } from '@mui/material';
 
 import { useConfirmEdit } from './composantsListe/useConfirmEdit';
 import { useConfirmDelete } from './composantsListe/useConfirmDelete';
@@ -31,6 +31,7 @@ interface HeaderProps {
 
 interface MenuListeEtudiantsProps {
     menuColor?: string;
+    statut: number;
 }
 
 
@@ -45,7 +46,6 @@ function MenuListeEtudiants(props: MenuListeEtudiantsProps): JSX.Element {
     const [hovered, setHovered] = useState<string | null>(null);
 
     const [selectedRows, setSelectedRows] = useState<StudentRow[]>([]);
-    const [menuColor, setMenuColor] = useState<string>("grey");
 
 
     const columns = getColumns(noteModifiable, hovered);
@@ -99,7 +99,7 @@ function MenuListeEtudiants(props: MenuListeEtudiantsProps): JSX.Element {
     }
 
     useEffect(() => {
-        console.log(props.menuColor);
+        setNoteModifiable(props.statut >= 4);
     }, []);
 
     const memeDico = (a: StudentRow, b: StudentRow): boolean => {

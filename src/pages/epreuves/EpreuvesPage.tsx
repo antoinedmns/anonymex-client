@@ -1,19 +1,24 @@
 import { useEffect, useMemo, useState, useTransition, type ReactElement } from "react";
 import { useParams } from "react-router-dom";
 import { getEpreuves, type APIEpreuve, type APIListEpreuves } from "../../contracts/epreuves";
-import { Box, Divider, Stack, Typography } from "@mui/material";
+import { Box, Divider, Snackbar, Stack, Typography, Alert } from "@mui/material";
 import { useSnackbarGlobal } from "../../contexts/SnackbarContext";
 import { EpreuveCard } from "./EpreuveCard";
 import { formatterDateEntiere } from "../../utils/dateUtils";
 import SearchBar from "../../components/SearchBar";
 import EpreuvesFiltreCard from "./EpreuvesFiltreCard";
-import { blue, grey, purple } from "@mui/material/colors";
+import { blue, grey, lightGreen, purple, teal } from "@mui/material/colors";
 import { themeEpreuves } from "../../theme/epreuves";
-import { Folder } from "@mui/icons-material";
+import { Download, Folder } from "@mui/icons-material";
 import { useModal } from "../../contexts/ModalContext";
 import { EpreuveModal } from "./epreuve-modal/EpreuveModal";
+import BoutonImportant from "./epreuve-modal/components/BoutonImportant";
+import { BordereauxModal } from "./epreuve-modal/BordereauxModal";
+import DocumentScannerIcon from '@mui/icons-material/DocumentScanner';
+import { ScanModal } from "./epreuve-modal/ScanModal"
 
 export type SortOption = "chronologique" | "inverse-chronologique";
+
 
 export default function EpreuvesPage(): ReactElement {
 
@@ -35,6 +40,16 @@ export default function EpreuvesPage(): ReactElement {
 
     // Contexte de snackbar pour afficher les erreurs
     const { afficherErreur } = useSnackbarGlobal();
+
+    // Modal imprimer bordereaux
+    const [ouvertModal, setOuvertModal] = useState(false);
+
+    // Modal scan
+    const [ouvertModalScan, setOuvertModalScan] = useState(false);
+
+    // Afficher snackbar de succès après le scan
+    const [openSnackbar, setOpenSnackbar] = useState<boolean>(false)
+
 
     // Modal
     const { ouvrir } = useModal();
@@ -70,7 +85,7 @@ export default function EpreuvesPage(): ReactElement {
 
     // lorsqu'une épreuve est cliquée : afficher modal
     const handleEpreuveClick = (epreuve: APIEpreuve) => {
-        ouvrir(<EpreuveModal epreuve={epreuve}  />);
+        ouvrir(<EpreuveModal epreuve={epreuve} />);
     }
 
     // lorsque le filtre de type d'épreuve change
@@ -120,50 +135,83 @@ export default function EpreuvesPage(): ReactElement {
         return resultat;
     }, [listeEpreuves, typeEpreuve, filtreStatut]);
 
+
+    const handleImprimerBordereaux = () => {
+        setOuvertModal(true);
+    }
+
+    const handleScan = () => {
+        setOuvertModalScan(true);
+    }
+
     return (
         <Box p={3}>
-            <SearchBar setNewSearchTerm={() => {}} backToSessions={true} setBackToSessions={() => {}}/>
+            <SearchBar setNewSearchTerm={() => { }} backToSessions={true} setBackToSessions={() => { }} />
 
-            { /* Page séparée en deux colonnes : liste des épreuves à gauche, filtres et options de tri à droite */ }
+            { /* Page séparée en deux colonnes : liste des épreuves à gauche, filtres et options de tri à droite */}
             <Stack direction={"row"} justifyContent={"center"}>
                 <Stack sx={{ width: '85vw', paddingTop: 4 }} spacing={4} direction={"row"}
-                justifyContent={"space-between"} alignItems={"flex-start"} divider={<Divider orientation="vertical" flexItem />}>
+                    justifyContent={"space-between"} alignItems={"flex-start"} divider={<Divider orientation="vertical" flexItem />}>
 
-                        <Box sx={{ width: '65%'}}>
-                            { /* LISTE DES ÉPREUVES */ }
-                            { estChargement ? (
-                                <Typography>Chargement des épreuves...</Typography>
-                            ) : (
-                                <Stack spacing={2}>
-                                    {epreuvesAffichees.map((epreuve) => (
-                                        typeof epreuve === "number" ? (
-                                            <Typography key={epreuve} variant="h5" paddingTop={3} fontWeight={700}>{formatterDateEntiere(epreuve)}</Typography>
-                                        ) : (
-                                            <EpreuveCard key={epreuve.code + epreuve.date} epreuve={epreuve} onClick={() => handleEpreuveClick(epreuve)} />
-                                        )
-                                    ))}
-                                </Stack>
-                            )}
-                        </Box>
-                        <Box sx={{ width: '35%' }}>
-                            { /* FILTRES ET OPTIONS DE TRI */ }
+                    <Box sx={{ width: '65%' }}>
+                        { /* LISTE DES ÉPREUVES */}
+                        {estChargement ? (
+                            <Typography>Chargement des épreuves...</Typography>
+                        ) : (
                             <Stack spacing={2}>
-                                <Typography variant="h5" paddingTop={3} fontWeight={700}>Filtres</Typography>
-                                <EpreuvesFiltreCard couleur={purple[300]} titre="Épreuves à venir" nombre={listeEpreuves.epreuvesAvenir.length} selectionne={typeEpreuve === 'aVenir'} onClick={() => handleTypeEpreuveChange('aVenir')} />
-                                <EpreuvesFiltreCard couleur={blue[300]} titre="Épreuves passées" nombre={listeEpreuves.epreuvesPassees.length} selectionne={typeEpreuve === 'passees'} onClick={() => handleTypeEpreuveChange('passees')} />
+                                {epreuvesAffichees.map((epreuve) => (
+                                    typeof epreuve === "number" ? (
+                                        <Typography key={epreuve} variant="h5" paddingTop={3} fontWeight={700}>{formatterDateEntiere(epreuve)}</Typography>
+                                    ) : (
+                                        <EpreuveCard key={epreuve.code + epreuve.date} epreuve={epreuve} onClick={() => handleEpreuveClick(epreuve)} />
+                                    )
+                                ))}
                             </Stack>
+                        )}
+                    </Box>
+                    <Box sx={{ width: '35%' }}>
+                        { /* FILTRES ET OPTIONS DE TRI */}
+                        <Stack spacing={2}>
+                            <Typography variant="h5" paddingTop={3} fontWeight={700}>Filtres</Typography>
+                            <EpreuvesFiltreCard couleur={purple[300]} titre="Épreuves à venir" nombre={listeEpreuves.epreuvesAvenir.length} selectionne={typeEpreuve === 'aVenir'} onClick={() => handleTypeEpreuveChange('aVenir')} />
+                            <EpreuvesFiltreCard couleur={blue[300]} titre="Épreuves passées" nombre={listeEpreuves.epreuvesPassees.length} selectionne={typeEpreuve === 'passees'} onClick={() => handleTypeEpreuveChange('passees')} />
+                        </Stack>
 
-                            <Stack spacing={2}>
-                                <Typography variant="h5" paddingTop={5} fontWeight={700}>Statuts</Typography>
-                                <EpreuvesFiltreCard couleur={themeEpreuves.status[0]} titre="Tout afficher" sousTexte="Afficher tous les statuts." icone={<Folder sx={{color: grey[700]}} fontSize="large" />} selectionne={filtreStatut === null} onClick={() => handleStatutChange(null)} />
-                                {statutMap.get(1) && <EpreuvesFiltreCard couleur={themeEpreuves.status[1]} titre="Matériel non imprimé" sousTexte="Examens pour lesquels le matériel n’a pas été imprimé." nombre={statutMap.get(1)} selectionne={filtreStatut === 1} onClick={() => handleStatutChange(1)} />}
-                                {statutMap.get(2) && <EpreuvesFiltreCard couleur={themeEpreuves.status[2]} titre="Materiel imprimé" sousTexte="Examens pour lesquels le matériel a été imprimé." nombre={statutMap.get(2)} selectionne={filtreStatut === 2} onClick={() => handleStatutChange(2)} />}
-                                {statutMap.get(3) && <EpreuvesFiltreCard couleur={themeEpreuves.status[3]} titre="En attente de dépot" sousTexte="Examens en attente de dépôt des copies." nombre={statutMap.get(3)} selectionne={filtreStatut === 3} onClick={() => handleStatutChange(3)} />}
-                                {statutMap.get(4) && <EpreuvesFiltreCard couleur={themeEpreuves.status[4]} titre="Dépot complet" sousTexte="Examens pour lesquels toutes les copies ont été déposées." nombre={statutMap.get(4)} selectionne={filtreStatut === 4} onClick={() => handleStatutChange(4)} />}
-                                {statutMap.get(5) && <EpreuvesFiltreCard couleur={themeEpreuves.status[5]} titre="Notes exportées" sousTexte="Afficher les examens pour lesquels les notes ont été exportées." nombre={statutMap.get(5)} selectionne={filtreStatut === 5} onClick={() => handleStatutChange(5)} />}
-                            </Stack>
-                        </Box>
-                    </Stack>
+                        <Stack spacing={2}>
+                            <Typography variant="h5" paddingTop={5} fontWeight={700}>Statuts</Typography>
+                            <EpreuvesFiltreCard couleur={themeEpreuves.status[0]} titre="Tout afficher" sousTexte="Afficher tous les statuts." icone={<Folder sx={{ color: grey[700] }} fontSize="large" />} selectionne={filtreStatut === null} onClick={() => handleStatutChange(null)} />
+                            {statutMap.get(1) && <EpreuvesFiltreCard couleur={themeEpreuves.status[1]} titre="Matériel non imprimé" sousTexte="Examens pour lesquels le matériel n’a pas été imprimé." nombre={statutMap.get(1)} selectionne={filtreStatut === 1} onClick={() => handleStatutChange(1)} />}
+                            {statutMap.get(2) && <EpreuvesFiltreCard couleur={themeEpreuves.status[2]} titre="Materiel imprimé" sousTexte="Examens pour lesquels le matériel a été imprimé." nombre={statutMap.get(2)} selectionne={filtreStatut === 2} onClick={() => handleStatutChange(2)} />}
+                            {statutMap.get(3) && <EpreuvesFiltreCard couleur={themeEpreuves.status[3]} titre="En attente de dépot" sousTexte="Examens en attente de dépôt des copies." nombre={statutMap.get(3)} selectionne={filtreStatut === 3} onClick={() => handleStatutChange(3)} />}
+                            {statutMap.get(4) && <EpreuvesFiltreCard couleur={themeEpreuves.status[4]} titre="Dépot complet" sousTexte="Examens pour lesquels toutes les copies ont été déposées." nombre={statutMap.get(4)} selectionne={filtreStatut === 4} onClick={() => handleStatutChange(4)} />}
+                            {statutMap.get(5) && <EpreuvesFiltreCard couleur={themeEpreuves.status[5]} titre="Notes exportées" sousTexte="Afficher les examens pour lesquels les notes ont été exportées." nombre={statutMap.get(5)} selectionne={filtreStatut === 5} onClick={() => handleStatutChange(5)} />}
+                        </Stack>
+
+
+
+                        <Stack spacing={2}>
+                            <Typography variant="h5" paddingTop={5} fontWeight={700}>Autre</Typography>
+                            <BoutonImportant color={teal[400]} titre="Imprimer les bordereaux" sousTitre="Générer et télécharger les bordereaux pour les épreuves sélectionnées." icone={<Download sx={{ color: grey[800] }} fontSize="large" />} onClick={() => handleImprimerBordereaux()} />
+                            <BoutonImportant color={lightGreen[400]} titre="Scanner les copies" sousTitre="Utiliser la caméra pour scanner les documents liés aux épreuves." icone={<DocumentScannerIcon sx={{ color: grey[800] }} fontSize="large" />} onClick={() => handleScan()} />
+                        </Stack>
+                        <BordereauxModal ouvert={ouvertModal} onFermer={() => setOuvertModal(false)} />
+                        <ScanModal setSuccess={setOpenSnackbar} ouvert={ouvertModalScan} setOuvertModalScan={setOuvertModalScan} />
+
+                        <Snackbar
+                            open={openSnackbar}
+                            autoHideDuration={6000}
+                            onClose={() => setOpenSnackbar(false)}
+                        >
+                            <Alert
+                                onClose={() => setOpenSnackbar(false)}
+                                severity="success"
+                                variant="filled"
+                            >
+                                Scan réussi. Copies déposées.
+                            </Alert>
+                        </Snackbar>
+                    </Box>
+                </Stack>
             </Stack>
         </Box>
     );
