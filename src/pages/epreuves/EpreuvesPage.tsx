@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, useTransition, type ReactElement } from "react";
-import { useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { getEpreuves, type APIEpreuve, type APIListEpreuves } from "../../contracts/epreuves";
-import { Box, Divider, Snackbar, Stack, Typography, Alert } from "@mui/material";
+import { Box, Divider, Snackbar, Stack, Typography, Alert, Button } from "@mui/material";
 import { useSnackbarGlobal } from "../../contexts/SnackbarContext";
 import { EpreuveCard } from "./EpreuveCard";
 import { formatterDateEntiere } from "../../utils/dateUtils";
@@ -49,10 +49,14 @@ export default function EpreuvesPage(): ReactElement {
 
     // Afficher snackbar de succès après le scan
     const [openSnackbar, setOpenSnackbar] = useState<boolean>(false)
-
+    const [codeScan, setCodeScan] = useState<string>("");
 
     // Modal
     const { ouvrir } = useModal();
+
+    // Navigation
+    const navigate = useNavigate();
+    const location = useLocation();
 
     // Paramètres d'URL
     const { sessionId } = useParams<{ sessionId: string }>();
@@ -83,9 +87,24 @@ export default function EpreuvesPage(): ReactElement {
         chargerEpreuves();
     }, [afficherErreur]);
 
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const ue = params.get("ue");
+        const tab = params.get("tab");
+
+        if (!ue || !listeEpreuves) return;
+
+        const epreuve = listeEpreuves.epreuvesAvenir.concat(listeEpreuves.epreuvesPassees).find(e => { if (typeof e != "number") { return e?.code === ue; } });
+
+        if ((typeof epreuve != "number") && epreuve) {
+            ouvrir(<EpreuveModal epreuve={epreuve} sessionId={sessionId} tab={tab} />);
+        }
+
+    }, [location.search, listeEpreuves]);
+
     // lorsqu'une épreuve est cliquée : afficher modal
     const handleEpreuveClick = (epreuve: APIEpreuve) => {
-        ouvrir(<EpreuveModal epreuve={epreuve} />);
+        navigate("/sessions/" + sessionId + "/epreuves?ue=" + epreuve.code + "&tab=details")
     }
 
     // lorsque le filtre de type d'épreuve change
@@ -195,19 +214,32 @@ export default function EpreuvesPage(): ReactElement {
                             <BoutonImportant color={lightGreen[400]} titre="Déposer des scans" icone={<DocumentScannerIcon sx={{ color: grey[800] }} fontSize="large" />} onClick={() => handleScan()} />
                         </Stack>
                         <BordereauxModal ouvert={ouvertModal} onFermer={() => setOuvertModal(false)} />
-                        <ScanModal setSuccess={setOpenSnackbar} ouvert={ouvertModalScan} setOuvertModalScan={setOuvertModalScan} />
+                        <ScanModal setSuccess={setOpenSnackbar} ouvert={ouvertModalScan} setOuvertModalScan={setOuvertModalScan} setCodeScan={setCodeScan} />
 
                         <Snackbar
                             open={openSnackbar}
                             autoHideDuration={6000}
                             onClose={() => setOpenSnackbar(false)}
+
                         >
                             <Alert
-                                onClose={() => setOpenSnackbar(false)}
                                 severity="success"
+                                onClose={() => setOpenSnackbar(false)}
                                 variant="filled"
+
+                                action={
+                                    <Button
+                                        color="inherit"
+                                        onClick={() =>
+                                            navigate(`/sessions/${sessionId}/epreuves?ue=${codeScan}&tab=scan`)
+                                        }
+                                    >
+                                        Voir
+                                    </Button>
+                                }
+                                sx={{ width: "100%" }}
                             >
-                                Scan réussi. Copies déposées.
+                                Scans déposés avec succès !
                             </Alert>
                         </Snackbar>
                     </Box>

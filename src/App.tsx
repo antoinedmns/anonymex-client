@@ -7,7 +7,6 @@ import PageInscription from './pages/authentification/signup/PageInscription'
 import PageConnexion from './pages/authentification/login/PageConnexion'
 import PageSession from './pages/sessions/PageSession'
 
-
 function App() {
   return (
     <Routes>
