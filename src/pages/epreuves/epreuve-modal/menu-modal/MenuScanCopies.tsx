@@ -1,19 +1,22 @@
 import { Stack, Typography, Collapse } from "@mui/material";
 import { useState, useRef } from "react";
-import { green, grey, red } from "@mui/material/colors";
+import { green, grey } from "@mui/material/colors";
 import BoutonStandard from "../components/BoutonStantard";
 import { useSnackbarGlobal } from "../../../../contexts/SnackbarContext";
 import { DropZone } from "../components/DropZone";
 import IconButton from "@mui/material/IconButton";
 import Close from "@mui/icons-material/Close"
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import { URL_API_BASE } from "../../../../utils/api";
 
 interface MenuScanCopiesProps {
     menuColor: string;
-    codeUE: string
+    codeUE: string;
+    sessionId: string;
 }
 
 export function MenuScanCopies(props: MenuScanCopiesProps) {
+    const { codeUE, sessionId } = props;
     const inputRef = useRef<HTMLInputElement | null>(null);
 
     const [loading, setLoading] = useState<boolean>(false);
@@ -61,24 +64,37 @@ export function MenuScanCopies(props: MenuScanCopiesProps) {
 
     // Soumettre le fichier sélectionné (appel API)
 
-    const handleSubmit = () => {
-        // Appel API pour envoyer le fichier
+    const handleSubmit = async () => {
         if (!fichiers) {
             afficherErreur("Aucun fichier sélectionné, veuillez sélectionner un fichier avant de soumettre");
             return;
         }
 
-        // props.codeUE 
-
-        // await 
         setLoading(true);
+        try {
 
-        setTimeout(() => {
-            setLoading(false);
+            // Créer un dépot pour chaque fichier selectionné
+            for (const fichier of Array.from(fichiers)) {
+                const formData = new FormData();
+                formData.append("fichier", fichier);
 
-            // Si success
+                const response = await fetch(`${URL_API_BASE}/sessions/${sessionId}/epreuves/${codeUE}/depot`, {
+                    method: "POST",
+                    body: formData,
+                });
+
+                console.log('ID DU DEPOT : ' + (await response.json()))
+
+                if (!response.ok) {
+                    throw new Error(`Erreur lors de l'envoi de "${fichier.name}" (statut ${response.status})`);
+                }
+            }
             handleClose();
-        }, 2000);
+        } catch (error) {
+            afficherErreur(error instanceof Error ? error.message : "Erreur lors de l'envoi des fichiers");
+        } finally {
+            setLoading(false);
+        }
     }
 
     // Afficher le pdf 
@@ -93,8 +109,8 @@ export function MenuScanCopies(props: MenuScanCopiesProps) {
     return (
         <Stack
             sx={{
-                height: fichiers ? "100%" : "100%",
-                width: fichiers ? "100%" : "100%",
+                height: "100%",
+                width: "100%",
                 p: 3,
                 borderRadius: 4,
                 transition: "height 0.3s ease, width 0.3s ease",

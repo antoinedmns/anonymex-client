@@ -50,3 +50,8 @@ export const updateEpreuve = (sessionId: number, epreuveCode: string, updateData
 export const getEpreuve = (sessionId: number, epreuveCode: string) => {
     return apiRequest<null, APIEpreuve>('GET', `/sessions/${sessionId}/epreuves/${epreuveCode}`);
 }
+
+/** Établit une connexion SSE pour suivre la progression d'un dépôt */
+export const getDepotProgression = (sessionId: number, epreuveCode: string, depotId: number) => {
+    return apiRequest<null, null>('GET', `/sessions/${sessionId}/epreuves/${epreuveCode}/depots/${depotId}/progression`);
+}
