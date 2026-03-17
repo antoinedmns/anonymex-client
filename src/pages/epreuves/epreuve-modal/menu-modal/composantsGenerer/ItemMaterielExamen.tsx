@@ -13,7 +13,7 @@ interface SelectionProps {
     icone: JSX.Element;
 }
 
-export default function Selection(props: SelectionProps) {
+export default function ItemMaterielExamen(props: SelectionProps) {
 
     return (
 

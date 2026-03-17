@@ -95,12 +95,9 @@ export function MenuScanCopies(props: MenuScanCopiesProps) {
             sx={{
                 height: fichiers ? "100%" : "100%",
                 width: fichiers ? "100%" : "100%",
-                bgcolor: grey[100],
                 p: 3,
                 borderRadius: 4,
                 transition: "height 0.3s ease, width 0.3s ease",
-
-
             }}
             direction="row"
             spacing={2}
@@ -112,12 +109,12 @@ export function MenuScanCopies(props: MenuScanCopiesProps) {
                     transition: "width 0.3s ease"
                 }}
             >
-                <Stack alignItems="center" spacing={1}>
+                <Stack alignItems="center" spacing={1} mb={1}>
                     <Typography variant="h4" fontWeight={700} color={grey[800]}>
                         Dépot copies scannées
                     </Typography>
                     <Typography variant="body1" color={grey[700]} textAlign="center">
-                        Déposez le fichier PDF contenant les données des copies scannées. Assurez-vous que le fichier est au format .pdf.
+                        Formats acceptés : PDF, JPG, PNG, ZIP et RAR.
                     </Typography>
                 </Stack>
 

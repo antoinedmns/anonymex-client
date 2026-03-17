@@ -1,7 +1,7 @@
 import { colors, Stack, Typography } from "@mui/material";
-import Selection from "./composantsGenerer/Selection";
+import ItemMaterielExamen from "./composantsGenerer/ItemMaterielExamen";
 import { useState } from "react";
-import PDFPage from "./composantsGenerer/PDFPage";
+import VisualiserMaterielExamen from "./composantsGenerer/VisualiserMaterielExamen";
 
 import LocalPrintshopIcon from '@mui/icons-material/LocalPrintshop';
 import GroupIcon from '@mui/icons-material/Group';
@@ -41,7 +41,7 @@ function MenuGenererMatExam(props: MenuGenererMatExamProps) {
         {pdfPage &&
             <Stack>
 
-                <PDFPage documentSelectionne={documentSelectionne} setPDFpage={setPdfPage} color={props.menuColor ?? colors.grey[200]} documentTelecharge={documentTelecharge} setDocumentTelecharge={setDocumentTelecharge} />
+                <VisualiserMaterielExamen documentSelectionne={documentSelectionne} setPDFpage={setPdfPage} color={props.menuColor ?? colors.grey[200]} documentTelecharge={documentTelecharge} setDocumentTelecharge={setDocumentTelecharge} />
 
             </Stack>
         }
@@ -52,9 +52,9 @@ function MenuGenererMatExam(props: MenuGenererMatExamProps) {
             <Stack mt={8} direction="column" alignItems="center" color={colors.grey[700]} >
                 <Typography variant="h6" marginBottom={5} fontWeight={500} > Choisissez un document à télécharger </Typography>
                 <Stack direction="column" spacing={2} alignItems="center" >
-                    <Selection titre="Bordereaux" sousTitre="Telechargé le 19/02/2025" color={props.menuColor + "1F"} termine={documentTelecharge[0]} handleClick={handleClickBordereaux} icone={<LocalPrintshopIcon sx={{ color: colors.grey[800] }} />} />
-                    <Selection titre="Coupons d'identification" sousTitre="Telechargé le 19/02/2025" color={props.menuColor + "1F"} termine={documentTelecharge[1]} handleClick={handleClickCoupons} icone={<GroupIcon sx={{ color: colors.grey[800] }} />} />
-                    <Selection titre="Listes d'émargement" sousTitre="Telechargé le 19/02/2025" color={props.menuColor + "1F"} termine={documentTelecharge[2]} handleClick={handleClickListes} icone={<ContactEmergencyIcon sx={{ color: colors.grey[800] }} />} />
+                    <ItemMaterielExamen titre="Bordereaux" sousTitre="Telechargé le 19/02/2025" color={props.menuColor + "1F"} termine={documentTelecharge[0]} handleClick={handleClickBordereaux} icone={<LocalPrintshopIcon sx={{ color: colors.grey[800] }} />} />
+                    <ItemMaterielExamen titre="Coupons d'identification" sousTitre="Telechargé le 19/02/2025" color={props.menuColor + "1F"} termine={documentTelecharge[1]} handleClick={handleClickCoupons} icone={<GroupIcon sx={{ color: colors.grey[800] }} />} />
+                    <ItemMaterielExamen titre="Listes d'émargement" sousTitre="Telechargé le 19/02/2025" color={props.menuColor + "1F"} termine={documentTelecharge[2]} handleClick={handleClickListes} icone={<ContactEmergencyIcon sx={{ color: colors.grey[800] }} />} />
                 </Stack>
             </Stack>
             : null

@@ -7,7 +7,10 @@ import Close from "@mui/icons-material/Close"
 import { useSnackbarGlobal } from "../../../contexts/SnackbarContext";
 import { DropZone } from "./components/DropZone";
 
-
+/**
+ * DOIT ETRE SUPPRIME et fusionné avec MenuScanCopies.tsx dans un composant à part entière
+ * Ce modal affichera le composant "à part" et MenuScanCopies idem 
+ */
 
 interface ScanModalProps {
     ouvert: boolean;

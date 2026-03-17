@@ -22,7 +22,7 @@ const Documents: Record<number, string> = {
 };
 
 
-export default function PDFPage(props: PDFPageProps) {
+export default function VisualiserMaterielExamen(props: PDFPageProps) {
 
     //const [documentUrl, setDocumentUrl] = useState<string>("");
 
