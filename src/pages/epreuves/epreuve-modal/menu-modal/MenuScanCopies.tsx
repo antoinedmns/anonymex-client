@@ -4,7 +4,8 @@ import { Stack } from "@mui/material";
 
 interface MenuScanCopiesProps {
     menuColor: string;
-    codeUE: string
+    codeUE: string;
+    sessionId: string;
 }
 
 export function MenuScanCopies(props: MenuScanCopiesProps) {

@@ -25,7 +25,7 @@ function BoutonImportant(props: EpreuvesFiltresProps): JSX.Element {
                         <Stack alignItems={'center'} justifyContent='center' alignSelf={'stretch'}
                             sx={{
                                 width: '5rem', fontSize: '1.2rem',
-                                bgcolor: '#00000010', // note: on rajoute 8F en ALPHA, c'est un byte hexédécimal supplémentaire pour l'opacité
+                                bgcolor: '#00000010',
                                 padding: 2
                             }}
                         >

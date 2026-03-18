@@ -2,7 +2,10 @@ import { Stack } from "@mui/material";
 import Modal from "@mui/material/Modal";
 import { DepotLayout } from "./components/DepotCopies/DepotLayout";
 
-
+/**
+ * DOIT ETRE SUPPRIME et fusionné avec MenuScanCopies.tsx dans un composant à part entière
+ * Ce modal affichera le composant "à part" et MenuScanCopies idem 
+ */
 
 interface ScanModalProps {
     ouvert: boolean;
