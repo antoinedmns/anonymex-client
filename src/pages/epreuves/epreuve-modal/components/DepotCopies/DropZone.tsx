@@ -1,10 +1,10 @@
 
 import { Button, Stack, Typography } from "@mui/material";
 import { grey } from "@mui/material/colors";
-import { useSnackbarGlobal } from "../../../../contexts/SnackbarContext";
+import { useSnackbarGlobal } from "../../../../../contexts/SnackbarContext";
 import { keyframes } from "@emotion/react";
 import DriveFolderUploadIcon from '@mui/icons-material/DriveFolderUpload';
-import BoutonStandard from "./BoutonStantard";
+import BoutonStandard from "../BoutonStantard";
 import { useEffect, useState } from "react";
 
 interface DropZoneProps {
@@ -102,47 +102,57 @@ export function DropZone(props: DropZoneProps) {
     }, [props.fichiers]);
 
     return (
+        <Stack spacing={1} alignItems="center" width="100%">
+            <Stack alignItems="center" spacing={1}>
+                <Typography variant="h4" fontWeight={700} color={grey[800]}>
+                    Dépot copies scannées
+                </Typography>
+                <Typography variant="body1" color={grey[700]} textAlign="center">
+                    Déposez le fichier PDF contenant les données des copies scannées. Assurez-vous que le fichier est au format .pdf.
+                </Typography>
+            </Stack>
 
-        <Stack
-            onDrop={(e) => handleDrop(e)}
-            onDragOver={(e) => handleDragOver(e)}
-            onDragLeave={() => setAnimate(false)}
-            onClick={() => props.inputRef.current?.click()}
-            sx={{
-                width: "100%",
-                height: "200px",
+            <Stack
+                onDrop={(e) => handleDrop(e)}
+                onDragOver={(e) => handleDragOver(e)}
+                onDragLeave={() => setAnimate(false)}
+                onClick={() => props.inputRef.current?.click()}
+                sx={{
+                    width: "100%",
+                    height: "200px",
 
-                border: `2px dashed ${grey[500]}`,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                borderRadius: 4,
-                bgcolor: grey[200],
-                '&:hover': {
+                    border: `2px dashed ${grey[500]}`,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderRadius: 4,
                     bgcolor: grey[200],
-                    borderColor: grey[500],
-                    cursor: "pointer",
-                    animation: `${fadeInFadeOut} 2s ease-in-out infinite`,
-                    animationPlayState: "running",
-                },
-                animationPlayState: "paused",
-                animation: animate ? `${fadeInFadeOut} 2s ease-in-out infinite` : "none",
+                    '&:hover': {
+                        bgcolor: grey[200],
+                        borderColor: grey[500],
+                        cursor: "pointer",
+                        animation: `${fadeInFadeOut} 2s ease-in-out infinite`,
+                        animationPlayState: "running",
+                    },
+                    animationPlayState: "paused",
+                    animation: animate ? `${fadeInFadeOut} 2s ease-in-out infinite` : "none",
 
-            }}
-        >
-            <Stack direction="column" alignItems="center" spacing={1}>
-                <DriveFolderUploadIcon sx={{ fontSize: 100, color: grey[600] }} />
-                <BoutonStandard color={grey[500]} >
-                    <label htmlFor="file-upload" style={{ cursor: "pointer", color: grey[700] }}> Selectionner </label>
-                </BoutonStandard>
-                <input
-                    id="file-upload"
-                    ref={props.inputRef}
-                    type="file"
-                    accept=".pdf"
-                    onChange={(e) => handleChange(e)}
-                    style={{ display: "none" }}
-                />
+                }}
+            >
+                <Stack direction="column" alignItems="center" spacing={1}>
+                    <DriveFolderUploadIcon sx={{ fontSize: 100, color: grey[600] }} />
+                    <BoutonStandard color={grey[500]} >
+                        <label htmlFor="file-upload" style={{ cursor: "pointer", color: grey[700] }}> Selectionner </label>
+                    </BoutonStandard>
+                    <input
+                        id="file-upload"
+                        ref={props.inputRef}
+                        type="file"
+                        accept=".pdf"
+                        onChange={(e) => handleChange(e)}
+                        style={{ display: "none" }}
+                    />
+                </Stack>
             </Stack>
         </Stack>
     );
