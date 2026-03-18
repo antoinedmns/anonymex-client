@@ -11,7 +11,6 @@ import type { APIListIncidents, APIIncident } from "../../../../../contracts/inc
 import { URL_API_BASE } from "../../../../../utils/api";
 
 
-
 interface DepotLayoutProps {
     isModal: boolean;
     handleClose?: () => void;
@@ -39,7 +38,6 @@ export function DepotLayout(props: DepotLayoutProps) {
     const [incidents] = useState<APIListIncidents | null>(null); // Affichage
     const [incidentOuvert] = useState<APIIncident | null>(null); // Pour savoir quel incident est ouvert
 
-    const [sources, setSources] = useState<EventSource[]>([]);
 
 
     // Contexte pour afficher les messages d'erreur
@@ -84,9 +82,6 @@ export function DepotLayout(props: DepotLayoutProps) {
     }
 
 
-    useEffect(() => {
-        console.log("Liste des sources mis à jour :", sources);
-    }, [sources]);
 
 
     // Soumettre le fichier sélectionné (appel API)
@@ -117,10 +112,15 @@ export function DepotLayout(props: DepotLayoutProps) {
 
             const info = await response.json();
 
-            appelerAPI(info);
+
+            const res = await appelerAPI(info);
+            console.log("Résultat de l'appel API pour le dépôt :", res);
 
         }
 
+        console.log("Tous les fichiers ont été traités");
+
+        // setFichiers(null);
 
         {/* 
         {
@@ -138,39 +138,38 @@ export function DepotLayout(props: DepotLayoutProps) {
     }
 
     // Appeler l'API pour écouter les événements de progression du dépôt via SSE
-    const appelerAPI = async (depotID: string) => {
+    const appelerAPI = async (depotID: string): Promise<boolean> => {
+        return new Promise<boolean>((resolve) => {
 
-        const url = `${URL_API_BASE}/sessions/${props.idSession}/epreuves/${codeUE}/depot/${depotID}/progress`;
-        console.log("Écoute des événements de progression pour le dépôt :", depotID, "via l'URL :", url);
-        const evtSource = new EventSource(url);
+            const url = `${URL_API_BASE}/sessions/${props.idSession}/epreuves/${codeUE}/depot/${depotID}/progress`;
+            console.log("Écoute des événements de progression pour le dépôt :", depotID, "via l'URL :", url);
+            const evtSource = new EventSource(url);
 
-        setSources(prev => [...prev, evtSource]);
 
-        // Écouter les événements de progression envoyés par le serveur
-        evtSource.addEventListener("progress", function (event) {
+            // Écouter les événements de progression envoyés par le serveur
+            evtSource.addEventListener("progress", function (event) {
 
-            console.log(`Progression du dépôt ${depotID} :`, event.data);
+                console.log(`Progression du dépôt ${depotID} :`, event.data);
 
-        });
-
-        // Si le dépôt est traité avec succès, on affiche un message de succès et on ferme la connexion SSE
-        evtSource.addEventListener("ok", function (event) {
-            console.log(`Dépôt ${depotID} traité avec succès :`, event.data);
-            evtSource.close();
-            setSources(prev => {
-                // Retirer la source fermée de la liste des sources
-                const next = prev.filter(source => source !== evtSource);
-
-                // Si plus aucune source, on arrête le loading
-                if (next.length === 0) {
-                    setLoading(false);
-                }
-
-                return next;
             });
-        });
-    }
 
+            // Si le dépôt est traité avec succès, on affiche un message de succès et on ferme la connexion SSE
+            evtSource.addEventListener("ok", function (event) {
+                console.log(`Dépôt ${depotID} traité avec succès :`, event.data);
+                evtSource.close();
+                setLoading(false);
+                resolve(true);
+            });
+            // En cas d'erreur lors du traitement du dépôt, on affiche un message d'erreur et on ferme la connexion SSE
+            evtSource.onerror = function (event) {
+                console.error(`Erreur lors du dépôt ${depotID} :`, event);
+                evtSource.close();
+                setLoading(false);
+                resolve(false);
+            };
+        }
+        );
+    }
 
 
     return (
