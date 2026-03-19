@@ -100,10 +100,10 @@ export function DropZone(props: DropZoneProps) {
     }, [props.fichiers]);
 
     return (
-        <Stack spacing={1} alignItems="center" width="100%">
-            <Stack alignItems="center" spacing={1}>
+        <Stack spacing={1} alignItems="center" width="100%" p={1}>
+            <Stack alignItems="center" spacing={1} pb={2}>
                 <Typography variant="h4" fontWeight={700} color={grey[800]}>
-                    Dépot copies scannées
+                    Dépôt copies scannées
                 </Typography>
                 <Typography variant="body1" color={grey[700]} textAlign="center">
                     Formats acceptés : PDF, PNG, JPG, ZIP et RAR.

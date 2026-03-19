@@ -9,6 +9,8 @@ import ContactEmergencyIcon from '@mui/icons-material/ContactEmergency';
 
 interface MenuGenererMatExamProps {
     menuColor?: string;
+    idSession: string;
+    codeEpreuve: string;
 }
 
 function MenuGenererMatExam(props: MenuGenererMatExamProps) {
@@ -41,7 +43,13 @@ function MenuGenererMatExam(props: MenuGenererMatExamProps) {
         {pdfPage &&
             <Stack>
 
-                <VisualiserMaterielExamen documentSelectionne={documentSelectionne} setPDFpage={setPdfPage} color={props.menuColor ?? colors.grey[200]} documentTelecharge={documentTelecharge} setDocumentTelecharge={setDocumentTelecharge} />
+                <VisualiserMaterielExamen
+                    idSession={props.idSession}
+                    codeEpreuve={props.codeEpreuve}
+                    documentSelectionne={documentSelectionne}
+                    setPDFpage={setPdfPage} color={props.menuColor ?? colors.grey[200]}
+                    documentTelecharge={documentTelecharge}
+                    setDocumentTelecharge={setDocumentTelecharge} />
 
             </Stack>
         }

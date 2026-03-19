@@ -1,5 +1,5 @@
 import { Close } from "@mui/icons-material";
-import { Collapse, Grow, IconButton, keyframes, LinearProgress, Stack, Typography } from "@mui/material";
+import { Box, Collapse, Grow, IconButton, keyframes, LinearProgress, Stack, Typography } from "@mui/material";
 import { grey } from "@mui/material/colors";
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import HourglassTopIcon from '@mui/icons-material/HourglassTop';
@@ -9,8 +9,8 @@ import CheckIcon from '@mui/icons-material/Check';
 interface FileListProps {
     fichiers: FileList;
     handleSupprFile: (index: number) => void;
-    numPage: number | null;
-    totalPages: number | null;
+    numPage: number[];
+    totalPages: number[];
     numFichier: number;
     debutTraitement: boolean;
     erreurs: number[];
@@ -24,14 +24,16 @@ export function FileList(props: FileListProps) {
         URL.revokeObjectURL(fileURL);
     }
 
-    const calcProgress = () => {
-        console.log(props.numPage, props.totalPages, props.numFichier);
-        if (props.numPage !== null && props.totalPages !== null) {
-            return (props.numPage / props.totalPages) * 100;
+    const calcProgress = (index: number) => {
+        const currentPage = props.numPage[index] ?? 0;
+        const currentTotalPages = props.totalPages[index] ?? 0;
+
+        if (currentTotalPages > 0) {
+            return Math.min(100, (currentPage / currentTotalPages) * 100);
         }
+
         return 0;
     }
-
 
     const spin = keyframes`
       from {
@@ -41,7 +43,6 @@ export function FileList(props: FileListProps) {
         transform: rotate(360deg);
       }
     `;
-
 
     return (
 
@@ -113,8 +114,25 @@ export function FileList(props: FileListProps) {
                             </Typography>
                         )}
 
-                        <Collapse in={props.debutTraitement && props.numFichier === index} >
-                            <LinearProgress variant="determinate" value={calcProgress()} />
+                        <Collapse in={props.debutTraitement} >
+                            <Box sx={{ display: 'flex', alignItems: 'center' }} mt={0.5}>
+                                <Box sx={{ width: '100%', mr: 1 }}>
+                                    <LinearProgress variant="determinate" value={calcProgress(index)} />
+                                </Box>
+                                <Box sx={{ minWidth: 35 }}>
+                                    {(() => {
+                                        const currentPage = props.numPage[index] ?? 0;
+                                        const currentTotalPages = props.totalPages[index];
+
+                                        return (
+                                            <Typography
+                                                variant="body2"
+                                                sx={{ color: 'text.secondary' }}
+                                            >{`${currentPage}/${currentTotalPages ?? "?"}`}</Typography>
+                                        );
+                                    })()}
+                                </Box>
+                            </Box>
                         </Collapse>
                     </Stack>
 

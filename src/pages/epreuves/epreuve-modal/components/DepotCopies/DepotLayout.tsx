@@ -1,5 +1,5 @@
 import { Close } from "@mui/icons-material";
-import { Collapse, Stack, TextField, Typography } from "@mui/material";
+import { Box, Collapse, Stack, TextField, Typography } from "@mui/material";
 import { green, grey } from "@mui/material/colors";
 import { useSnackbarGlobal } from "../../../../../contexts/SnackbarContext";
 import { DropZone } from "./DropZone";
@@ -41,8 +41,8 @@ export function DepotLayout(props: DepotLayoutProps) {
     const [incidentOuvert] = useState<APIIncident | null>(null); // Pour savoir quel incident est ouvert
 
     // Affichage barre de progression
-    const [numPage, setPage] = useState<number | null>(null);
-    const [totalPages, setTotalPages] = useState<number | null>(null);
+    const [numPage, setPage] = useState<number[]>([]);
+    const [totalPages, setTotalPages] = useState<number[]>([]);
     const [numFichier, setNumFichier] = useState<number>(0);
     const [debutTraitement, setDebutTraitement] = useState<boolean>(false);
     const [erreurs, setErreurs] = useState<number[]>([]);
@@ -66,6 +66,9 @@ export function DepotLayout(props: DepotLayoutProps) {
     const handleReset = () => {
         setFichiers(null);
         setNumFichier(0);
+        setPage([]);
+        setTotalPages([]);
+        
         if (inputRef.current) {
             inputRef.current.value = "";
         }
@@ -110,11 +113,12 @@ export function DepotLayout(props: DepotLayoutProps) {
         setErreurs([]);
         setLoading(true);
         setNumFichier(0);
+        setPage([]);
+        setTotalPages([]);
         setDebutTraitement(true);
         let i = 0;
         for (const fichier of Array.from(fichiers)) {
 
-            console.log("NUM FICHIER ENVOYE :", i);
             const formData = new FormData();
             formData.append("fichier", fichier);
 
@@ -128,10 +132,6 @@ export function DepotLayout(props: DepotLayoutProps) {
             await appelerAPI(info, i);
             i = i + 1;
             setNumFichier(i);
-
-
-            setPage(null);
-            setTotalPages(null);
 
         }
 
@@ -170,8 +170,21 @@ export function DepotLayout(props: DepotLayoutProps) {
 
                 console.log(`Progression du dépôt ${depotID} :`, event.data);
                 const infos = JSON.parse(event.data);
-                setPage(infos.n);
-                setTotalPages(infos.t);
+                
+                // set page d'index numFichier à jour
+                setPage(prev => {
+                    const newPage = [...(prev || [])];
+                    newPage[i] = Number(infos.n ?? infos.p) || 0;
+                    return newPage;
+                });
+
+                setTotalPages(prev => {
+                    const newTotalPages = [...(prev || [])];
+                    if (newTotalPages[i] === undefined) {
+                        newTotalPages[i] = Number(infos.t ?? infos.totalPages) || 0;
+                    }
+                    return newTotalPages;
+                });
 
             });
 
@@ -180,8 +193,8 @@ export function DepotLayout(props: DepotLayoutProps) {
                 console.log(`Dépôt ${depotID} traité avec succès :`, event.data);
                 evtSource.close();
                 resolve(true);
-
             });
+
             // En cas d'erreur lors du traitement du dépôt, on affiche un message d'erreur et on ferme la connexion SSE
             evtSource.onerror = function (event) {
                 console.error(`Erreur lors du dépôt ${depotID} :`, event);
@@ -288,25 +301,29 @@ export function DepotLayout(props: DepotLayoutProps) {
                 {incidents === null && (
 
                     <Collapse in={fichiers !== null} orientation="vertical" sx={{ width: fichiers ? "50%" : "0%", transition: "width 0.3s ease" }} >
-                        <Stack direction="column" alignItems="center" justifyContent={"space-between"} p={2}   >
-                            <FileList fichiers={fichiers!} handleSupprFile={handleSupprFile} numPage={numPage} totalPages={totalPages} numFichier={numFichier} debutTraitement={debutTraitement} erreurs={erreurs} />
-                        </Stack>
-                        <Stack direction="row" width="100%" spacing={2} mt={2} justifyContent="center">
-                            {afficherConfirmation && (
-                                <BoutonStandard
-                                    color={grey[400]}
-                                    onClick={() => {
-                                        setAfficherConfirmation(false);
-                                        setDebutTraitement(false);
-                                        setErreurs([]);
-                                        setLoading(false);
-                                        handleReset();
-                                    }}
-                                    texte="Déposer d'autres fichiers"
-                                    width="75%"
-                                />
-                            )}
-                        </Stack>
+                        <Box p={2}>
+                            <Stack direction="column" alignItems="center" justifyContent={"space-between"}>
+                                <FileList fichiers={fichiers!} handleSupprFile={handleSupprFile} numPage={numPage} totalPages={totalPages} numFichier={numFichier} debutTraitement={debutTraitement} erreurs={erreurs} />
+                            </Stack>
+
+                            <Stack direction="row" width="100%" spacing={2} justifyContent="center">
+                                {afficherConfirmation && (
+                                    <BoutonStandard
+                                        color={grey[400]}
+                                        onClick={() => {
+                                            // todo: placer dans un handler (dans handleReset par exemple..)
+                                            setAfficherConfirmation(false);
+                                            setDebutTraitement(false);
+                                            setErreurs([]);
+                                            setLoading(false);
+                                            handleReset();
+                                        }}
+                                        texte="NOUVEAU DÉPÔT"
+                                        width="80%"
+                                    />
+                                )}
+                            </Stack>
+                        </Box>
 
                     </Collapse>
 

@@ -69,23 +69,17 @@ export function EpreuveModal({ epreuve, sessionId, tab }: EpreuveModalProps) {
                             }}>
                             <Tab label="Details" />
                             <Tab label="Liste étudiants" />
-                            {epreuve.statut === 1 || epreuve.statut === 2 ? (
-                                <Tab label="Générer matériel d'examen" />
-                            ) : null}
-                            {epreuve.statut === 3 ? (
-                                <Tab label="Scanner copies" />
-                            ) : null}
-                            {epreuve.statut === 4 || epreuve.statut === 5 ? (
-                                <Tab label="Copies scannées" />
-                            ) : null}
-                            <Tab label="Incidents" />
+                            {epreuve.statut <= 2 && <Tab label="Générer matériel d'examen" />}
+                            {epreuve.statut === 3 && <Tab label="Scanner copies" />}
+                            {epreuve.statut >= 4 && <Tab label="Exporter les notes" />}
+                            {epreuve.statut >= 3 && <Tab label="Incidents" />}
                         </Tabs>
                     </Stack>
                     <Stack width={"100%"} padding={2} height={"100%"} justifyContent={"center"}>
                         {numeroOnglet === 0 && <DetailsEpreuve epreuve={epreuve} />}
                         {numeroOnglet === 1 && <MenuListeEtudiants statut={epreuve.statut} menuColor={epreuve.statut == 1 ? undefined : themeEpreuves.status[epreuve.statut]} />}
 
-                        {numeroOnglet === 2 && epreuve.statut <= 2 && <MenuGenererMatExam menuColor={themeEpreuves.status[epreuve.statut]} />}
+                        {numeroOnglet === 2 && epreuve.statut <= 2 && <MenuGenererMatExam menuColor={themeEpreuves.status[epreuve.statut]} idSession={sessionId} codeEpreuve={epreuve.code} />}
                         {numeroOnglet === 2 && epreuve.statut >= 3 && <MenuScanCopies codeUE={epreuve.code} idSession={sessionId} menuColor={themeEpreuves.status[epreuve.statut]} />}
 
                         {numeroOnglet === 3 && <MenuIncidents epreuve={epreuve} />}

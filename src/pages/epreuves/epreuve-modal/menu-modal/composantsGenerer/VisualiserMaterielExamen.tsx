@@ -8,6 +8,8 @@ import { URL_API_BASE } from "../../../../../utils/api";
 
 
 interface PDFPageProps {
+    idSession: string;
+    codeEpreuve: string;
     documentSelectionne: 1 | 2 | 3;
     setPDFpage: (value: boolean) => void;
     color: string;
@@ -21,13 +23,15 @@ const Documents: Record<number, string> = {
     3: "Listes d'émargement"
 };
 
-
 export default function VisualiserMaterielExamen(props: PDFPageProps) {
 
     //const [documentUrl, setDocumentUrl] = useState<string>("");
 
     //const document = await fetch("https://..."); // 
-    const documentUrl = URL_API_BASE + "/documents/bordereau.pdf";
+    const documentUrl = props.documentSelectionne === 1 ? URL_API_BASE + "/documents/bordereau.pdf"
+        : props.documentSelectionne === 2 ? URL_API_BASE + `/documents/session/${props.idSession}/epreuve/${props.codeEpreuve}/coupons.pdf`
+        : URL_API_BASE + "/documents/bordereau.pdf";
+
     const listeSalles = ["Aucune", "Salle 1", "Salle 2", "Salle 3"];
 
     const [salleSelectionnee, setSalleSelectionnee] = useState<number>(0);
