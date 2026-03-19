@@ -1,20 +1,18 @@
 import { Card, CardActionArea, Stack, Typography } from "@mui/material";
 import ErrorIcon from '@mui/icons-material/Error';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import type { APIIncident } from '../../../../../contracts/incidents';
+
 
 type IncidentType = "resolu" | "non resolu";
 
 interface IncidentCardProps {
-    infosIncident: {
-        nomIncident: string;
-        descriptionIncident: string;
-        id: number;
-    };
-    onClick: (id: number) => void;
+    incident: APIIncident;
+    onClick: (incident: APIIncident) => void;
     type?: IncidentType;
 }
 
-function IncidentCard({ infosIncident, onClick, type = "non resolu" }: IncidentCardProps) {
+function IncidentCard({ incident, onClick, type = "non resolu" }: IncidentCardProps) {
     const isResolved = type === "resolu";
 
     const colors = {
@@ -29,14 +27,17 @@ function IncidentCard({ infosIncident, onClick, type = "non resolu" }: IncidentC
             sx={{
                 borderColor: colors.border,
                 backgroundColor: '#fdf0ef87',
-                borderRadius: '10px'
+                borderRadius: '10px',
+                
             }}
         >
             <CardActionArea
-                onClick={() => onClick(infosIncident.id)}
-                sx={{ display: 'flex', alignItems: 'center', p: 1.5}}
+                onClick={() => onClick(incident)}
+                sx={{ display: 'flex', p: 1.5}}
+                
+                
             >
-                <Stack direction="row" alignItems="center" spacing={2}>
+                <Stack direction="row" spacing={2} width={"100%"} justifyContent={"flex-start"}>
                     <Stack
                         alignItems="center"
                         justifyContent="center"
@@ -50,17 +51,17 @@ function IncidentCard({ infosIncident, onClick, type = "non resolu" }: IncidentC
                         {isResolved ? <CheckCircleIcon /> : <ErrorIcon />}
                     </Stack>
 
-                    <Stack>
+                    <Stack >
                         <Typography
                             variant="subtitle1"
                             fontWeight="bold"
                             color={isResolved ? "#000000d4" : "#852221"}
                         >
-                            {infosIncident.nomIncident + " - N°" + infosIncident.id} 
+                            {incident.titre} 
                         </Typography>
 
                         <Typography variant="body2" color="text.secondary">
-                            {infosIncident.descriptionIncident}
+                            {incident.details}
                         </Typography>
                     </Stack>
                 </Stack>

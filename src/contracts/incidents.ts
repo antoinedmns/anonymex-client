@@ -7,13 +7,12 @@ export const IncidentSchema = z.object({
     codeEpreuve: z.string(),
     titre: z.string(),
     details: z.string(),
-    resolu: z.boolean(), // 0: NON RESOLU, 1: RESOLU 
     codeAnonymat: z.string().optional(),
     noteQuart: z.number().int().positive().optional(),
 });
 
 export const ListIncidentsSchema = z.object({
-    incidents: z.array(IncidentSchema.pick({ idIncident: true, titre: true, details: true, resolu: true }))
+    incidents: z.array(IncidentSchema.pick({ idIncident: true, titre: true, details: true}))
 });
 
 // --- Types ---

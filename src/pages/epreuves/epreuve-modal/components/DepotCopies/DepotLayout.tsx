@@ -7,9 +7,10 @@ import BoutonStandard from "../BoutonStantard";
 import { useEffect, useRef, useState } from "react";
 import { FileList } from "./FileList";
 
-import type { APIListIncidents, APIIncident } from "../../../../../contracts/incidents";
+import type { APIIncident } from "../../../../../contracts/incidents";
 import { URL_API_BASE } from "../../../../../utils/api";
-
+import IncidentListe from "../../menu-modal/composantsIncidents/IncidentListe";
+import QueryBuilderIcon from '@mui/icons-material/QueryBuilder';
 
 
 interface DepotLayoutProps {
@@ -21,6 +22,15 @@ interface DepotLayoutProps {
     setSuccess?: (success: boolean) => void;
 }
 
+const exempleIncident: APIIncident = {
+    idIncident: 120,
+    idSession: 1,
+    codeEpreuve: "HAV950I",
+    titre: "TitreTest",
+    details: "Description",
+    codeAnonymat: "505205",
+    noteQuart: 205
+}
 
 
 export function DepotLayout(props: DepotLayoutProps) {
@@ -37,8 +47,8 @@ export function DepotLayout(props: DepotLayoutProps) {
     const [codeUE, setCodeUE] = useState<string>("");
 
 
-    const [incidents] = useState<APIListIncidents | null>(null); // Affichage
-    const [incidentOuvert] = useState<APIIncident | null>(null); // Pour savoir quel incident est ouvert
+    const [incidents, setIncidents] = useState<APIIncident[]>([]); // Affichage
+    const [incidentOuvert, setIncidentOuvert] = useState<APIIncident | null>(null); // Pour savoir quel incident est ouvert
 
     // Affichage barre de progression
     const [numPage, setPage] = useState<number[]>([]);
@@ -68,9 +78,14 @@ export function DepotLayout(props: DepotLayoutProps) {
         setNumFichier(0);
         setPage([]);
         setTotalPages([]);
-        
+        setDebutTraitement(false);
+        setAfficherConfirmation(false);
+        setErreurs([]);
+        setLoading(false);
+        setIncidents([]);
+
         if (inputRef.current) {
-            inputRef.current.value = "";
+            inputRef.current.value = "";    
         }
     };
 
@@ -192,13 +207,20 @@ export function DepotLayout(props: DepotLayoutProps) {
             evtSource.addEventListener("ok", function (event) {
                 console.log(`Dépôt ${depotID} traité avec succès :`, event.data);
                 evtSource.close();
+             
                 resolve(true);
             });
+            
+            evtSource.addEventListener("incident", function (event) {
+                console.log('Erreur, INCIDENT détécté', event.data);
+                const info = JSON.parse(event.data)
+                setIncidents((prev) => [...prev, info]);
+                console.log(incidents);
+            })
 
             // En cas d'erreur lors du traitement du dépôt, on affiche un message d'erreur et on ferme la connexion SSE
             evtSource.onerror = function (event) {
                 console.error(`Erreur lors du dépôt ${depotID} :`, event);
-
                 setErreurs(prev => [...prev, i]);
                 evtSource.close();
                 resolve(false);
@@ -247,10 +269,10 @@ export function DepotLayout(props: DepotLayoutProps) {
                     )}
 
 
-                    <Stack spacing={2} width="100%" height={"100%"}>
+                    <Stack spacing={2} width="100%" height={"100%"} alignItems={"center"}>
 
                         {/* Si il n'y a pas d'incidents, on affiche la dropzone, sinon on affiche les incidents */}
-                        {true ? (<>
+                        {!debutTraitement ? (<>
 
                             <DropZone inputRef={inputRef} setFichiers={setFichiers} fichiers={fichiers} />
                             <Collapse in={fichiers !== null} sx={{ width: "100%" }}>
@@ -282,13 +304,21 @@ export function DepotLayout(props: DepotLayoutProps) {
 
                             : (
                                 /* Affichage des incidents */
-                                <Stack>
-                                    <Typography variant="h6" color="error">
-                                        {erreurs.length} fichier(s) ont rencontré une erreur lors du traitement.
-                                    </Typography>
-                                    <Typography variant="body1" color="textSecondary">
-                                        Veuillez vérifier les fichiers et réessayer.
-                                    </Typography>
+                                <Stack alignContent={"center"} alignItems={"center"} justifyContent={"center"} width={"100%"} pt={8}>
+                                    {incidents.length === 0 ? (
+                                        <Stack alignItems={"center"} spacing={2}> 
+                                            <QueryBuilderIcon sx={{fontSize:100, color:grey[600]}}/>
+
+                                            <Typography variant="h5" fontWeight={500} color={grey[700]} textAlign={"center"}>
+                                                Ici seront affichés les<br/>incidents de lecture
+                                            </Typography>
+                                                
+                                        </Stack>
+                                    ) : (
+                                        <>
+                                           
+                                        <IncidentListe liste={incidents} onClick={setIncidentOuvert} /> </>
+                                    )}
                                 </Stack>
                             )}
 
@@ -298,7 +328,7 @@ export function DepotLayout(props: DepotLayoutProps) {
                 </Stack>
 
                 {/* Partie droite, affichage des fichiers sélectionnés ou des incidents */}
-                {incidents === null && (
+                {!incidentOuvert && (
 
                     <Collapse in={fichiers !== null} orientation="vertical" sx={{ width: fichiers ? "50%" : "0%", transition: "width 0.3s ease" }} >
                         <Box p={2}>
@@ -310,14 +340,7 @@ export function DepotLayout(props: DepotLayoutProps) {
                                 {afficherConfirmation && (
                                     <BoutonStandard
                                         color={grey[400]}
-                                        onClick={() => {
-                                            // todo: placer dans un handler (dans handleReset par exemple..)
-                                            setAfficherConfirmation(false);
-                                            setDebutTraitement(false);
-                                            setErreurs([]);
-                                            setLoading(false);
-                                            handleReset();
-                                        }}
+                                        onClick={handleReset}
                                         texte="NOUVEAU DÉPÔT"
                                         width="80%"
                                     />

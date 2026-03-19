@@ -55,7 +55,7 @@ export default function MenuIncidents({ epreuve }: MenuIncidentsProps) {
             <Stack direction="row" margin={"2em"} divider={<Divider orientation="vertical" flexItem />} gap={6}>
                 <Stack gap={2} width={"50%"}>
                     <Typography variant="h5">Incidents à traiter</Typography>
-
+                    {/* 
                     <IncidentListe 
                         liste={ListeIncidents.map(incident => ({
                             nom: incident.nomIncident,
@@ -64,6 +64,7 @@ export default function MenuIncidents({ epreuve }: MenuIncidentsProps) {
                         }))}
                         onClick={(id) => setIncidentSelectionne(id!)}
                     />
+                    */}
                 </Stack>
 
                 {incidentSelectionne !== null && incident && (

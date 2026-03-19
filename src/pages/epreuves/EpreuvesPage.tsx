@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useTransition, type ReactElement } from "react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import {  useNavigate, useParams } from "react-router-dom";
 import { getEpreuves, type APIEpreuve, type APIListEpreuves } from "../../contracts/epreuves";
 import { Box, Divider, Snackbar, Stack, Typography, Alert, Button } from "@mui/material";
 import { useSnackbarGlobal } from "../../contexts/SnackbarContext";
@@ -56,11 +56,10 @@ export default function EpreuvesPage(): ReactElement {
 
     // Navigation
     const navigate = useNavigate();
-    const location = useLocation();
 
     // Paramètres d'URL
     const { sessionId } = useParams<{ sessionId: string }>();
-    if (!sessionId) return <Typography variant="h5" color="error">ID de session manquant dans l'URL.</Typography>;
+    
 
     // Charger les épreuves depuis l'API
     useEffect(() => {
@@ -87,25 +86,11 @@ export default function EpreuvesPage(): ReactElement {
         chargerEpreuves();
     }, [afficherErreur, sessionId]);
 
-    useEffect(() => {
-        const params = new URLSearchParams(location.search);
-        const ue = params.get("ue");
-        const tab = params.get("tab");
-
-        if (!ue || !listeEpreuves) return;
-
-        const epreuve = listeEpreuves.epreuvesAvenir.concat(listeEpreuves.epreuvesPassees).find(e => { if (typeof e != "number") { return e?.code === ue; } });
-
-        if ((typeof epreuve != "number") && epreuve) {
-            console.log("Ouvrir modal pour l'épreuve :", epreuve, "idSession :", sessionId);
-            ouvrir(<EpreuveModal epreuve={epreuve} sessionId={sessionId} tab={tab} />);
-        }
-
-    }, [location.search, listeEpreuves, ouvrir, sessionId]);
 
     // lorsqu'une épreuve est cliquée : afficher modal
     const handleEpreuveClick = (epreuve: APIEpreuve) => {
-        navigate("/sessions/" + sessionId + "/epreuves?ue=" + epreuve.code + "&tab=details")
+        if (sessionId === undefined) return ;
+        ouvrir(<EpreuveModal epreuve={epreuve} sessionId={sessionId} tab={"details"} />);
     }
 
     // lorsque le filtre de type d'épreuve change
@@ -163,6 +148,8 @@ export default function EpreuvesPage(): ReactElement {
     const handleScan = () => {
         setOuvertModalScan(true);
     }
+
+    if (!sessionId) return <Typography variant="h5" color="error">ID de session manquant dans l'URL.</Typography>;
 
     return (
         <Box p={3}>

@@ -36,16 +36,16 @@ export function EpreuveCard(props: { epreuve: APIEpreuve, onClick: () => void })
     const date = new Date(props.epreuve.date);
     const epreuve = props.epreuve;
     return (
-        <Card variant="outlined" sx={{ backgroundColor: grey[50], borderRadius: 2 }}>
+        <Card variant="outlined" sx={{ backgroundColor: grey[50], borderRadius: 2 }} >
             <CardActionArea sx={{ '&:hover': { backgroundColor: grey[100] } }} onClick={props.onClick}>
                 <Stack direction="row" alignItems="center">
-                    <Stack padding={2} direction="row" alignItems="center" spacing={2}>
+                    <Stack padding={2} direction="row" alignItems="center" spacing={2} >
                         <IconeRond icon={epreuveStatutIcons[epreuve.statut]} bgcolor={themeEpreuves.status[epreuve.statut] + '4F'} />
-                        <Stack direction="column">
-                            <Stack direction="row" alignItems="center" spacing={1}>
+                        <Stack direction="column" >
+                            <Stack direction="row" alignItems="center" spacing={1} fontWeight={400}>
                                 <Typography variant="h6">{epreuve.code}</Typography>
                                 <Typography variant="h6" fontWeight={500}>-</Typography>
-                                <Typography variant="h6" fontWeight={400}> {epreuve.nom} </Typography>
+                                <Typography variant="h6" textOverflow={"ellipsis"} > {epreuve.nom} </Typography>
                             </Stack>
                             <Stack direction="row" spacing={2}>
                                 <Typography variant="body2">{epreuve.salles.join(', ')}</Typography>
@@ -54,7 +54,7 @@ export function EpreuveCard(props: { epreuve: APIEpreuve, onClick: () => void })
                     </Stack>
 
                     <Stack flexGrow={1} />
-                    <Stack direction="column" spacing={1} padding={2} alignItems="flex-end">
+                    <Stack direction="column" spacing={1} padding={2} alignItems="flex-end" >
                         <Chip label={`${epreuveStatutTextes[epreuve.statut]}`} size="small" sx={{ bgcolor: themeEpreuves.status[epreuve.statut] + '8F' }} />
                     </Stack>
 

@@ -23,7 +23,7 @@ export default function IncidentDetail({ numeroAnonymat, note, idIncident, onCli
     });
 
     function FormValide(numero: string | null, note: string | null) {
-        let newErrors = {
+        const newErrors = {
             note: "",
             numero: ""
         };

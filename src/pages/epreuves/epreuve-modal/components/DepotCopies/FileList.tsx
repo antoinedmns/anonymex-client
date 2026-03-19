@@ -4,7 +4,7 @@ import { grey } from "@mui/material/colors";
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import HourglassTopIcon from '@mui/icons-material/HourglassTop';
 import CheckIcon from '@mui/icons-material/Check';
-
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 
 interface FileListProps {
     fichiers: FileList;
@@ -90,7 +90,7 @@ export function FileList(props: FileListProps) {
 
                     <Grow in={props.erreurs.includes(index)} unmountOnExit>
                         <IconButton>
-                            <Close />
+                            <ErrorOutlineIcon />
                         </IconButton>
                     </Grow>
 
@@ -114,7 +114,7 @@ export function FileList(props: FileListProps) {
                             </Typography>
                         )}
 
-                        <Collapse in={props.debutTraitement} >
+                        <Collapse in={props.debutTraitement && !props.erreurs.includes(index)}  >
                             <Box sx={{ display: 'flex', alignItems: 'center' }} mt={0.5}>
                                 <Box sx={{ width: '100%', mr: 1 }}>
                                     <LinearProgress variant="determinate" value={calcProgress(index)} />

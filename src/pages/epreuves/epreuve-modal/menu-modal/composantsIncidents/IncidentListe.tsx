@@ -1,28 +1,23 @@
 import IncidentCard from './IncidentCard';
-import { Stack } from '@mui/material';
+import { Stack, Typography } from '@mui/material';
+import type { APIIncident } from '../../../../../contracts/incidents';
 
-interface Incident {
-    nom: string;
-    description: string;
-    id: number;
-}
 
 interface IncidentListeProps {
-    liste: Incident[];
-    onClick: (id: number) => void;
+    liste: APIIncident[];
+    onClick: (incident: APIIncident) => void;
 }
 
 export default function IncidentListe({ liste, onClick }: IncidentListeProps) {
     return (
-        <Stack gap={2}>
+        <Stack gap={2} >
+             <Typography variant='h6'>
+                Liste incidents
+            </Typography>
             {liste.map((incident) => (
                 <IncidentCard 
-                    key={incident.id}
-                    infosIncident={{
-                        nomIncident: incident.nom,
-                        descriptionIncident: incident.description,
-                        id: incident.id
-                    }}
+                    key={incident.idIncident}
+                    incident = {incident}
                     onClick={onClick}
                 />
             ))}
