@@ -1,6 +1,6 @@
 import { Close } from "@mui/icons-material";
-import { Collapse, Stack, TextField } from "@mui/material";
-import { green } from "@mui/material/colors";
+import { Collapse, Stack, TextField, Typography } from "@mui/material";
+import { green, grey } from "@mui/material/colors";
 import { useSnackbarGlobal } from "../../../../../contexts/SnackbarContext";
 import { DropZone } from "./DropZone";
 import BoutonStandard from "../BoutonStantard";
@@ -9,6 +9,7 @@ import { FileList } from "./FileList";
 
 import type { APIListIncidents, APIIncident } from "../../../../../contracts/incidents";
 import { URL_API_BASE } from "../../../../../utils/api";
+
 
 
 interface DepotLayoutProps {
@@ -35,10 +36,19 @@ export function DepotLayout(props: DepotLayoutProps) {
     // Si c'est un modal, on affiche le champ de code UE
     const [codeUE, setCodeUE] = useState<string>("");
 
+
     const [incidents] = useState<APIListIncidents | null>(null); // Affichage
     const [incidentOuvert] = useState<APIIncident | null>(null); // Pour savoir quel incident est ouvert
 
+    // Affichage barre de progression
+    const [numPage, setPage] = useState<number | null>(null);
+    const [totalPages, setTotalPages] = useState<number | null>(null);
+    const [numFichier, setNumFichier] = useState<number>(0);
+    const [debutTraitement, setDebutTraitement] = useState<boolean>(false);
+    const [erreurs, setErreurs] = useState<number[]>([]);
 
+    // Confirmation de fin
+    const [afficherConfirmation, setAfficherConfirmation] = useState<boolean>(false);
 
     // Contexte pour afficher les messages d'erreur
     const { afficherErreur } = useSnackbarGlobal();
@@ -55,6 +65,7 @@ export function DepotLayout(props: DepotLayoutProps) {
     // Réinitialiser le champ de fichier et l'état associé
     const handleReset = () => {
         setFichiers(null);
+        setNumFichier(0);
         if (inputRef.current) {
             inputRef.current.value = "";
         }
@@ -96,12 +107,14 @@ export function DepotLayout(props: DepotLayoutProps) {
             afficherErreur("Code UE manquant, veuillez entrer le code UE associé au fichier");
             return;
         }
-
+        setErreurs([]);
         setLoading(true);
-
-        console.log("Appel recuperer depots ID");
+        setNumFichier(0);
+        setDebutTraitement(true);
+        let i = 0;
         for (const fichier of Array.from(fichiers)) {
 
+            console.log("NUM FICHIER ENVOYE :", i);
             const formData = new FormData();
             formData.append("fichier", fichier);
 
@@ -112,13 +125,20 @@ export function DepotLayout(props: DepotLayoutProps) {
 
             const info = await response.json();
 
+            await appelerAPI(info, i);
+            i = i + 1;
+            setNumFichier(i);
 
-            const res = await appelerAPI(info);
-            console.log("Résultat de l'appel API pour le dépôt :", res);
+
+            setPage(null);
+            setTotalPages(null);
 
         }
 
         console.log("Tous les fichiers ont été traités");
+
+
+        setAfficherConfirmation(true);
 
         // setFichiers(null);
 
@@ -138,18 +158,20 @@ export function DepotLayout(props: DepotLayoutProps) {
     }
 
     // Appeler l'API pour écouter les événements de progression du dépôt via SSE
-    const appelerAPI = async (depotID: string): Promise<boolean> => {
+    const appelerAPI = async (depotID: string, i: number): Promise<boolean> => {
         return new Promise<boolean>((resolve) => {
 
             const url = `${URL_API_BASE}/sessions/${props.idSession}/epreuves/${codeUE}/depot/${depotID}/progress`;
             console.log("Écoute des événements de progression pour le dépôt :", depotID, "via l'URL :", url);
             const evtSource = new EventSource(url);
 
-
             // Écouter les événements de progression envoyés par le serveur
             evtSource.addEventListener("progress", function (event) {
 
                 console.log(`Progression du dépôt ${depotID} :`, event.data);
+                const infos = JSON.parse(event.data);
+                setPage(infos.n);
+                setTotalPages(infos.t);
 
             });
 
@@ -157,14 +179,15 @@ export function DepotLayout(props: DepotLayoutProps) {
             evtSource.addEventListener("ok", function (event) {
                 console.log(`Dépôt ${depotID} traité avec succès :`, event.data);
                 evtSource.close();
-                setLoading(false);
                 resolve(true);
+
             });
             // En cas d'erreur lors du traitement du dépôt, on affiche un message d'erreur et on ferme la connexion SSE
             evtSource.onerror = function (event) {
                 console.error(`Erreur lors du dépôt ${depotID} :`, event);
+
+                setErreurs(prev => [...prev, i]);
                 evtSource.close();
-                setLoading(false);
                 resolve(false);
             };
         }
@@ -187,7 +210,7 @@ export function DepotLayout(props: DepotLayoutProps) {
 
             spacing={2}
         >
-            <Stack width={"100%"} direction="row">
+            <Stack width={"100%"} direction="row" spacing={2}>
 
                 {/* Partie gauche, zone de dépôt & validation */}
 
@@ -195,6 +218,7 @@ export function DepotLayout(props: DepotLayoutProps) {
                     sx={{
                         width: fichiers ? "50%" : "100%",
                         transition: "width 0.3s ease",
+                        height: "100%"
 
                     }}
                 >
@@ -210,10 +234,10 @@ export function DepotLayout(props: DepotLayoutProps) {
                     )}
 
 
-                    <Stack spacing={2} width="100%">
+                    <Stack spacing={2} width="100%" height={"100%"}>
 
                         {/* Si il n'y a pas d'incidents, on affiche la dropzone, sinon on affiche les incidents */}
-                        {incidents === null ? (<>
+                        {true ? (<>
 
                             <DropZone inputRef={inputRef} setFichiers={setFichiers} fichiers={fichiers} />
                             <Collapse in={fichiers !== null} sx={{ width: "100%" }}>
@@ -245,7 +269,14 @@ export function DepotLayout(props: DepotLayoutProps) {
 
                             : (
                                 /* Affichage des incidents */
-                                <Stack></Stack>
+                                <Stack>
+                                    <Typography variant="h6" color="error">
+                                        {erreurs.length} fichier(s) ont rencontré une erreur lors du traitement.
+                                    </Typography>
+                                    <Typography variant="body1" color="textSecondary">
+                                        Veuillez vérifier les fichiers et réessayer.
+                                    </Typography>
+                                </Stack>
                             )}
 
 
@@ -255,9 +286,31 @@ export function DepotLayout(props: DepotLayoutProps) {
 
                 {/* Partie droite, affichage des fichiers sélectionnés ou des incidents */}
                 {incidents === null && (
-                    <Collapse in={fichiers !== null} orientation="vertical" sx={{ width: fichiers ? "50%" : "0%", transition: "width 0.3s ease", overflow: "scroll" }} >
-                        <FileList fichiers={fichiers!} handleSupprFile={handleSupprFile} />
+
+                    <Collapse in={fichiers !== null} orientation="vertical" sx={{ width: fichiers ? "50%" : "0%", transition: "width 0.3s ease" }} >
+                        <Stack direction="column" alignItems="center" justifyContent={"space-between"} p={2}   >
+                            <FileList fichiers={fichiers!} handleSupprFile={handleSupprFile} numPage={numPage} totalPages={totalPages} numFichier={numFichier} debutTraitement={debutTraitement} erreurs={erreurs} />
+                        </Stack>
+                        <Stack direction="row" width="100%" spacing={2} mt={2} justifyContent="center">
+                            {afficherConfirmation && (
+                                <BoutonStandard
+                                    color={grey[400]}
+                                    onClick={() => {
+                                        setAfficherConfirmation(false);
+                                        setDebutTraitement(false);
+                                        setErreurs([]);
+                                        setLoading(false);
+                                        handleReset();
+                                    }}
+                                    texte="Déposer d'autres fichiers"
+                                    width="75%"
+                                />
+                            )}
+                        </Stack>
+
                     </Collapse>
+
+
                 )}
 
                 {/* Si un incident est ouvert, on affiche les détails de l'incident */}
@@ -268,7 +321,7 @@ export function DepotLayout(props: DepotLayoutProps) {
                 )}
 
             </Stack>
-        </Stack>
+        </Stack >
 
     );
 }

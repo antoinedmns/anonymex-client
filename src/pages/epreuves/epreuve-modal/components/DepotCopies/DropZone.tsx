@@ -106,7 +106,7 @@ export function DropZone(props: DropZoneProps) {
                     Dépot copies scannées
                 </Typography>
                 <Typography variant="body1" color={grey[700]} textAlign="center">
-                    Déposez le fichier PDF contenant les données des copies scannées. Assurez-vous que le fichier est au format .pdf.
+                    Formats acceptés : PDF, PNG, JPG, ZIP et RAR.
                 </Typography>
             </Stack>
 
