@@ -22,17 +22,6 @@ interface DepotLayoutProps {
     setSuccess?: (success: boolean) => void;
 }
 
-const exempleIncident: APIIncident = {
-    idIncident: 120,
-    idSession: 1,
-    codeEpreuve: "HAV950I",
-    titre: "TitreTest",
-    details: "Description",
-    codeAnonymat: "505205",
-    noteQuart: 205
-}
-
-
 export function DepotLayout(props: DepotLayoutProps) {
 
     // Reference pour le champ de fichier (input)
@@ -330,10 +319,12 @@ export function DepotLayout(props: DepotLayoutProps) {
                 {/* Partie droite, affichage des fichiers sélectionnés ou des incidents */}
                 {!incidentOuvert && (
 
-                    <Collapse in={fichiers !== null} orientation="vertical" sx={{ width: fichiers ? "50%" : "0%", transition: "width 0.3s ease" }} >
+                    <Collapse in={fichiers !== null} unmountOnExit orientation="vertical" sx={{ width: fichiers ? "50%" : "0%", transition: "width 0.3s ease" }} >
                         <Box p={2}>
                             <Stack direction="column" alignItems="center" justifyContent={"space-between"}>
-                                <FileList fichiers={fichiers!} handleSupprFile={handleSupprFile} numPage={numPage} totalPages={totalPages} numFichier={numFichier} debutTraitement={debutTraitement} erreurs={erreurs} />
+                                {fichiers && (
+                                    <FileList fichiers={fichiers} handleSupprFile={handleSupprFile} numPage={numPage} totalPages={totalPages} numFichier={numFichier} debutTraitement={debutTraitement} erreurs={erreurs} />
+                                )}
                             </Stack>
 
                             <Stack direction="row" width="100%" spacing={2} justifyContent="center">

@@ -20,8 +20,16 @@ export function FileList(props: FileListProps) {
 
     const handleViewFile = (file: File) => {
         const fileURL = URL.createObjectURL(file);
-        window.open(fileURL, "_blank");
-        URL.revokeObjectURL(fileURL);
+        const previewWindow = window.open(fileURL, "_blank", "noopener,noreferrer");
+
+        if (!previewWindow) {
+            URL.revokeObjectURL(fileURL);
+            return;
+        }
+
+        window.setTimeout(() => {
+            URL.revokeObjectURL(fileURL);
+        }, 60000);
     }
 
     const calcProgress = (index: number) => {
@@ -47,9 +55,9 @@ export function FileList(props: FileListProps) {
     return (
 
         <Stack sx={{ overflow: "scroll" }} p={3} width={"100%"} spacing={1} >
-            {props.fichiers && Array.from(props.fichiers).map((file, index) => (
+            {Array.from(props.fichiers).map((file, index) => (
 
-                <Stack key={index} direction="row" alignItems="center" spacing={1} p={1} >
+                <Stack key={`${file.name}-${file.lastModified}-${file.size}`} direction="row" alignItems="center" spacing={1} p={1} >
 
                     {/* Affichage avant traitement */}
                     <Grow in={!props.debutTraitement} unmountOnExit>
@@ -138,8 +146,7 @@ export function FileList(props: FileListProps) {
 
                 </Stack>
 
-            ))
-            }
+            ))}
         </Stack >
 
 

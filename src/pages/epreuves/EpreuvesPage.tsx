@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useTransition, type ReactElement } from "react";
+import { useCallback, useEffect, useMemo, useState, useTransition, type ReactElement } from "react";
 import {  useNavigate, useParams } from "react-router-dom";
 import { getEpreuves, type APIEpreuve, type APIListEpreuves } from "../../contracts/epreuves";
 import { Box, Divider, Snackbar, Stack, Typography, Alert, Button } from "@mui/material";
@@ -88,10 +88,10 @@ export default function EpreuvesPage(): ReactElement {
 
 
     // lorsqu'une épreuve est cliquée : afficher modal
-    const handleEpreuveClick = (epreuve: APIEpreuve) => {
+    const handleEpreuveClick = useCallback((epreuve: APIEpreuve) => {
         if (sessionId === undefined) return ;
         ouvrir(<EpreuveModal epreuve={epreuve} sessionId={sessionId} tab={"details"} />);
-    }
+    }, [ouvrir, sessionId]);
 
     // lorsque le filtre de type d'épreuve change
     const handleTypeEpreuveChange = (newType: 'passees' | 'aVenir') => {
@@ -170,7 +170,7 @@ export default function EpreuvesPage(): ReactElement {
                                     typeof epreuve === "number" ? (
                                         <Typography key={epreuve} variant="h5" paddingTop={3} fontWeight={700}>{formatterDateEntiere(epreuve)}</Typography>
                                     ) : (
-                                        <EpreuveCard key={epreuve.code + epreuve.date} epreuve={epreuve} onClick={() => handleEpreuveClick(epreuve)} />
+                                        <EpreuveCard key={epreuve.code + epreuve.date} epreuve={epreuve} onClick={handleEpreuveClick} />
                                     )
                                 ))}
                             </Stack>
