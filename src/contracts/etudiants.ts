@@ -18,10 +18,10 @@ export type APINewEtudiant = z.infer<typeof NewEtudiantSchema>;
 export type APIUpdateEtudiant = z.infer<typeof UpdateEtudiantSchema>;
 
 // --- Endpoint API ---
-export const createSession = (newEtudiant: APINewEtudiant) => {
+export const createEtudiant = (newEtudiant: APINewEtudiant) => {
     return apiRequest<APINewEtudiant, APIEtudiant>('POST', '/etudiants/', newEtudiant, NewEtudiantSchema);
 }
 
-export const updateSession = (numero: number, updateData: APIUpdateEtudiant) => {
+export const updateEtudiant = (numero: number, updateData: APIUpdateEtudiant) => {
     return apiRequest<APIUpdateEtudiant, APIEtudiant>('PATCH', `/etudiants/${numero}`, updateData, UpdateEtudiantSchema);
 }
