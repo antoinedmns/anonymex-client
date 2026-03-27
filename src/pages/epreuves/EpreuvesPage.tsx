@@ -153,7 +153,7 @@ export default function EpreuvesPage(): ReactElement {
 
     return (
         <Box p={3}>
-            <SearchBar setNewSearchTerm={() => { }} backToSessions={true} setBackToSessions={() => { }} />
+            <SearchBar sessionId={+sessionId} />
 
             { /* Page séparée en deux colonnes : liste des épreuves à gauche, filtres et options de tri à droite */}
             <Stack direction={"row"} justifyContent={"center"}>

@@ -1,63 +1,48 @@
-import * as React from 'react';
+import { useState } from 'react';
+import { TextField, Stack, Paper, Button, Tooltip, Autocomplete } from '@mui/material';
 
-import { TextField, Typography, Badge, Stack, Chip, Grow, Paper, InputBase, Button, Tooltip } from '@mui/material';
-
-import Box from '@mui/material/Box';
-import Drawer from '@mui/material/Drawer';
-import List from '@mui/material/List';
 import Divider from '@mui/material/Divider';
-import FolderIcon from '@mui/icons-material/Folder';
-import SettingsIcon from '@mui/icons-material/Settings';
 import SearchIcon from '@mui/icons-material/Search';
-import AddIcon from '@mui/icons-material/Add';
 import IconButton from '@mui/material/IconButton';
-import { grey } from '@mui/material/colors';
-import SearchOffIcon from '@mui/icons-material/SearchOff';
-import MenuIcon from '@mui/icons-material/Menu';
-import DirectionsIcon from '@mui/icons-material/Directions';
-import theme from '../theme/theme';
 import LeftArrow from '@mui/icons-material/ArrowBackIosNew';
 
-import IconeRond from './IconeRond';
-import { de } from 'zod/v4/locales';
 import { FormatListBulleted } from '@mui/icons-material';
 
 import { useNavigate } from 'react-router-dom';
+import { getRecherche } from '../contracts/recherche';
 
 interface SearchBarProps {
-    setNewSearchTerm: (value: string) => void;
+    sessionId: number;
     sessionName?: string;
-    backToSessions: boolean;
-    setBackToSessions: (value: boolean) => void;
 }
 
+type RechercheResultat =
+    { type: 0; code: string; } |
+    { type: 1; codeSalle: string; } |
+    { type: 2; horodatage: string; } |
+    { type: 3; codeSalle: string; horodatage: string; } |
+    { type: 4; action: number; } |
+    { type: 5; numero: number; };
 
 function SearchBar(props: SearchBarProps) {
+    const [resultats, setResultats] = useState<RechercheResultat[]>([]);
 
-    const [searchTerm, setSearchTerm] = React.useState('');
+    async function fetchResults(value: string) {
+        const response = await getRecherche(props.sessionId, value);
 
-    const [clickedSearch, setClickedSearch] = React.useState(false);
+        if (response.status !== 200 || !response.data) {
+            return console.error("Erreur lors de la recherche :", response.error || "Inconnue");
+        }
 
+        setResultats(response.data.resultats);
+    }
 
-    const [defaultWidth, setDefaultWidth] = React.useState(50);
-
-    const defaultHeight = 50;
 
     const navigate = useNavigate();
 
-    function handleSearch() {
-        props.setNewSearchTerm(searchTerm);
-    }
-
     function handleBackToSessions() {
         navigate('/accueil');
-        props.setBackToSessions(false);
     }
-
-    React.useEffect(() => {
-        setDefaultWidth(50 + (clickedSearch ? 20 : 0));
-
-    }, [clickedSearch]);
 
     return (
         <Stack spacing={2} alignItems="center" justifyContent={"center"} direction={"row"} width={'100%'}>
@@ -67,27 +52,57 @@ function SearchBar(props: SearchBarProps) {
                     onClick={handleBackToSessions}
                     variant='outlined'
                     sx={{ alignSelf: 'stretch' }}
-                >Session 1 pair 2025</Button>
+                >{props.sessionName || 'Nom de session inconnu'}</Button>
             </Tooltip>
 
-            <Paper component="form" sx={{ p: '2px 4px', display: 'flex', alignItems: 'center', width: 600, minWidth: '30vw', borderColor: '#c4c4c4' }} variant='outlined'>
-                <InputBase
-                    sx={{ ml: 1, flex: 1 }}
-                    placeholder="Rechercher une épreuve, une date, une salle..."
-                />
-                <IconButton type="button" sx={{ p: '10px' }} aria-label="search">
-                    <SearchIcon />
-                </IconButton>
-                <Divider sx={{ height: 28, m: 0.5 }} orientation="vertical" />
+            <Autocomplete
+                freeSolo
+                id="search-input"
+                disableClearable
+                options= {resultats.map((option) => {
+                    switch (option.type) {
+                        case 0:
+                            return `UE : ${option.code}`;
+                        case 1:
+                            return `Salle : ${option.codeSalle}`;
+                        case 2:
+                            return `Heure : ${option.horodatage}`;
+                        case 3:
+                            return `Salle : ${option.codeSalle} à ${option.horodatage}`;
+                        case 4:
+                            return `Action : ${option.action}`;
+                        case 5:
+                            return `Étudiant : ${option.numero}`;
+                        default:
+                            return "Résultat inconnu";
+                    }
+                })}
+                onInputChange={(_, newInputValue) => {
+                    console.log("Nouveau terme de recherche :", newInputValue);
+                    fetchResults(newInputValue);
+                }}
+                renderInput={(params) => (
+                    <Paper sx={{ p: '2px 10px', display: 'flex', alignItems: 'center', width: 600, minWidth: '30vw', borderColor: '#c4c4c4' }} variant='outlined'>
 
-                <Tooltip title="Voir toutes les épreuves">
-                    <IconButton color="primary" sx={{ p: '10px' }} aria-label="directions">
-                        <FormatListBulleted />
-                    </IconButton>
-                </Tooltip>
-            </Paper>
+                        <TextField
+                            {...params}
+                            placeholder="Rechercher une épreuve, une salle, une heure, une action ou un étudiant"
+                            variant="standard"
+                        />
 
+                        <IconButton type="button" sx={{ p: '10px' }} aria-label="search">
+                            <SearchIcon />
+                        </IconButton>
+                        <Divider sx={{ height: 28, m: 0.5 }} orientation="vertical" />
 
+                        <Tooltip title="Voir toutes les épreuves">
+                            <IconButton color="primary" sx={{ p: '10px' }} aria-label="directions">
+                                <FormatListBulleted />
+                            </IconButton>
+                        </Tooltip>
+                    </Paper>
+                )}
+            />
         </Stack >
 
     );
