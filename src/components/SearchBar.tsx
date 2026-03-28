@@ -1,12 +1,13 @@
 import { useState, type ReactElement } from 'react';
-import { TextField, Stack, Button, Tooltip, Autocomplete, CircularProgress, Divider, IconButton, Box } from '@mui/material';
+import { TextField, Stack, Button, Tooltip, Autocomplete, Divider, IconButton, Box } from '@mui/material';
 
 import LeftArrow from '@mui/icons-material/ArrowBackIosNew';
 
 import { useNavigate } from 'react-router-dom';
 import { getRecherche } from '../contracts/recherche';
-import { FormatListBulleted, StickyNote2, MeetingRoom, AccessTime, Person, Construction } from '@mui/icons-material';
+import { FormatListBulleted, StickyNote2, MeetingRoom, AccessTime, Person, Construction, Search } from '@mui/icons-material';
 import { getEpreuve, type APIEpreuve } from '../contracts/epreuves';
+import { formatterDateEntiere } from '../utils/dateUtils';
 
 interface SearchBarProps {
     onResultClick?: (epreuve: APIEpreuve) => void;
@@ -39,9 +40,9 @@ function formatResultat(option: RechercheResultat): string {
         case 1:
             return `Salle : ${option.codeSalle}`;
         case 2:
-            return `Heure : ${option.horodatage}`; // Todo : formater l'heure de manière plus lisible
+            return `Date : ${formatterDateEntiere(+option.horodatage)}`; // Todo : formater l'heure de manière plus lisible
         case 3:
-            return `Salle : ${option.codeSalle} à ${option.horodatage}`;
+            return `Salle : ${option.codeSalle}, le ${formatterDateEntiere(+option.horodatage)}`;
         case 4:
             return `Action : ${option.action}`;
         case 5:
@@ -62,45 +63,57 @@ function SearchBar(props: SearchBarProps) {
     // Liste des résultats de recherche (change a chaque action de recherche)
     const [resultats, setResultats] = useState<RechercheResultat[] | null>(null);
 
-    // Indique si une recherche est en cours (affiche un spinner dans ce cas)
-    const [loading, setLoading] = useState(false);
+    // Valeur de l'input de recherche
+    const [inputValue, setInputValue] = useState("");
 
-    // Gère le clic sur un résultat de recherche (non-fonctionnelle actuellement)
+    // Gère le clic sur un résultat de recherche (Epreuve: fonctionnel, autres types: à implémenter)
     async function handleClickResultat(option: RechercheResultat) {
         switch (option.type) {
+            // Epreuve
             case 0:
-                const response = await getEpreuve(props.sessionId, option.code);
+                const epreuve = await getEpreuve(props.sessionId, option.code);
 
-                console.log("Détails de l'épreuve :", response);
+                console.log("Détails de l'épreuve :", epreuve);
 
-                if (response.status === 200 && response.data) {
-                    const epreuve = response.data;
-                    props.onResultClick?.(epreuve);
+                if (epreuve.status === 200 && epreuve.data) {
+                    const res_epreuve = epreuve.data;
+                    props.onResultClick?.(res_epreuve);
                 }
                 break;
-            case 1:
-            // Ouverture du modal de la salle correspondante
-            // WIP
 
+            // Salle
+            case 1:
+                navigate(`/sessions/${props.sessionId}/recherche/salle/${option.codeSalle}`);
+                break;
+
+            // Heure
+            case 2:
+                navigate(`/sessions/${props.sessionId}/recherche/heure/${option.horodatage}`);
+                break;
+
+            // Salle + Heure
+            case 3:
+                navigate(`/sessions/${props.sessionId}/recherche/salleheure/${option.codeSalle}/${option.horodatage}`);
+                break;
+
+            // Action
+            // Todo : implémenter la page de résultats de recherche pour les actions
         }
     }
 
 
 
     async function fetchResults(value: string) {
-        setLoading(true);
         const response = await getRecherche(props.sessionId, value);
 
         if (response.status !== 200 || !response.data) {
             setResultats(null);
-            setLoading(false);
             return;
         }
 
         setResultats(response.data.resultats);
 
         console.log("Résultats de recherche :", response.data.resultats);
-        setLoading(false);
     }
 
 
@@ -121,16 +134,15 @@ function SearchBar(props: SearchBarProps) {
                     onClick={handleBackToSessions}
                     variant='outlined'
                     sx={{ alignSelf: 'stretch' }}
-                >{props.sessionName || 'Nom de session inconnu'}</Button>
+                >Retour Accueil</Button>
             </Tooltip>
 
-            <Autocomplete<RechercheResultat, false, false, true>
+            <Autocomplete
                 freeSolo
                 id="search-input"
 
-                // Affiche un spinner de chargement dans la barre de recherche pendant la recherche
-                loading={loading}
-
+                disableClearable
+                inputValue={inputValue}
 
                 options={resultats ?? []}
                 filterOptions={(options) => options}
@@ -151,7 +163,6 @@ function SearchBar(props: SearchBarProps) {
                         <Box
                             key={key}
                             component="li"
-                            onClick={() => handleClickResultat(option)}
                             {...optionProps}
                             sx={{
                                 display: 'flex',
@@ -203,19 +214,28 @@ function SearchBar(props: SearchBarProps) {
                     );
                 }}
                 onInputChange={(_, newInputValue) => {
+                    setInputValue(newInputValue);
 
                     if (newInputValue.trim() === "" || newInputValue.trim().length < 3) {
 
                         setResultats(null);
-                        setLoading(false);
                         return;
 
                     } else {
-
                         console.log("Nouveau terme de recherche :", newInputValue);
                         fetchResults(newInputValue);
 
                     }
+                }}
+
+                onChange={(_, value) => {
+                    if (value && typeof value !== 'string') {
+                        handleClickResultat(value);
+
+                        setInputValue("");
+                        setResultats(null);
+                    }
+
                 }}
                 renderInput={(params) => (
                     <TextField
@@ -226,8 +246,11 @@ function SearchBar(props: SearchBarProps) {
                                 ...params.InputProps,
                                 endAdornment: (
                                     <>
-                                        {loading ? <CircularProgress color="inherit" size={20} /> : null}
                                         {params.InputProps.endAdornment}
+
+                                        <IconButton sx={{ p: '10px' }} aria-label="search">
+                                            <Search />
+                                        </IconButton>
 
                                         <Divider sx={{ height: 28, m: 0.5 }} orientation="vertical" />
                                         <IconButton sx={{ p: '10px' }} aria-label="search">
