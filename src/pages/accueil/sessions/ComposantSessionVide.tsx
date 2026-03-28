@@ -1,6 +1,6 @@
 import React from "react";
 import { Button, Stack, Typography } from "@mui/material";
-import theme from "../../theme/theme";
+import theme from "../../../theme/theme";
 import { Add } from "@mui/icons-material";
 import SessionParentEtape from "./session-modal/creer-session/SessionParentEtape";
 

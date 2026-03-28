@@ -1,6 +1,6 @@
 import react from 'react';
-import { Modal } from '../../../../components/Modal';
-import { deleteSession } from '../../../../contracts/sessions';
+import { Modal } from '../../../../../components/Modal';
+import { deleteSession } from '../../../../../contracts/sessions';
 import { Box, Typography, Button } from '@mui/material';
 
 type Props = {

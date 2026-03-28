@@ -5,7 +5,7 @@ import EpreuvesPage from './pages/epreuves/EpreuvesPage'
 import TestsComponents from './pages/TestsComponents'
 import PageInscription from './pages/authentification/signup/PageInscription'
 import PageConnexion from './pages/authentification/login/PageConnexion'
-import PageSession from './pages/sessions/PageSession'
+import PageSession from './pages/accueil/PageAccueil'
 
 function App() {
   return (

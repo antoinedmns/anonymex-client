@@ -1,6 +1,6 @@
 import { Box, ButtonBase, Card, CardActionArea, CardActions, Chip, IconButton, ListItemIcon, Menu, MenuItem, Typography } from "@mui/material";
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
-import type { SessionsStatut } from "../../contracts/sessions";
+import type { SessionsStatut } from "../../../contracts/sessions";
 import { useNavigate } from "react-router-dom";
 import HourglassBottomIcon from '@mui/icons-material/HourglassBottom';
 import DoneIcon from '@mui/icons-material/Done';
@@ -161,7 +161,7 @@ export function CarteDeSession({id, annee, nom, nombreStatut, fetchSessions}: Pr
 
 export function ButtonGererSession({icone, description, onClick}: {icone: React.ReactNode; description: string; onClick: () => void}): React.ReactElement {
     return(
-        <ButtonBase sx={{flexDirection: 'column', borderRadius: '10px', border: '2px solid #00000015', padding: '1.5em', flex: 1, '&:hover': {borderColor: '#00000030'}}} onClick={onClick}>
+        <ButtonBase sx={{flexDirection: 'column', borderRadius: '10px', border: '2px solid #00000020', padding: '1.5em', flex: 1, '&:hover': {borderColor: '#00000030'}}} onClick={onClick}>
             {icone}
             <Typography variant="h6" sx={{fontWeight: "400", lineHeight: 1.6}} mt={2} color="textSecondary" textAlign={'center'}>{description}</Typography>
         </ButtonBase>

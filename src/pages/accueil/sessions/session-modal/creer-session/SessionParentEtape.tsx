@@ -2,9 +2,9 @@ import { useState } from "react";
 import SessionEtapeTexte from "./SessionEtapeTexte";
 import SessionEtapeBordereau from "./SessionEtapeBordereau";
 import SessionEtapeTeleversement from "./SessionEtapeTeleversement";
-import { Modal } from "../../../../components/Modal";
-import { createSession } from "../../../../contracts/sessions";
-import { URL_API_BASE } from "../../../../utils/api";
+import { Modal } from "../../../../../components/Modal";
+import { createSession } from "../../../../../contracts/sessions";
+import { URL_API_BASE } from "../../../../../utils/api";
 import { useNavigate } from "react-router-dom";
 import Alert from "@mui/material/Alert";
 

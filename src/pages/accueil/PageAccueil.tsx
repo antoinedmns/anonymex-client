@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import ComposantSessionVide from "./ComposantSessionVide";
-import ComposantSessionPleine from "./ComposantSessionPleine";
+import ComposantSessionVide from "./sessions/ComposantSessionVide";
+import ComposantSessionPleine from "./sessions/ComposantSessionPleine";
 import { Alert, Avatar, Button, IconButton, ListItemIcon, Menu, MenuItem, Snackbar, Stack, Typography } from "@mui/material";
 import theme from "../../theme/theme";
 import LinkIcon from '@mui/icons-material/Link';
@@ -88,16 +88,16 @@ export default function PageSession() {
                 anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
             >
                 <MenuItem onClick={() => navigate("/settings")}>
-                <ListItemIcon>
-                    <Settings fontSize="small" />
-                </ListItemIcon>
-                Paramètres
+                    <ListItemIcon>
+                        <Settings fontSize="small" />
+                    </ListItemIcon>
+                    Paramètres
                 </MenuItem>
                 <MenuItem onClick={() => navigate("/")}>
-                <ListItemIcon>
-                    <Logout fontSize="small" />
-                </ListItemIcon>
-                Se déconnecter
+                    <ListItemIcon>
+                        <Logout fontSize="small" />
+                    </ListItemIcon>
+                    Se déconnecter
                 </MenuItem>
             </Menu>
 

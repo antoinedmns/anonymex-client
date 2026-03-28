@@ -1,10 +1,10 @@
 import React from "react";
 import { SessionModalBouton } from "../composantsFormulaireSession";
-import { Modal } from "../../../../components/Modal";
+import { Modal } from "../../../../../components/Modal";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { updateSession } from "../../../../contracts/sessions";
+import { updateSession } from "../../../../../contracts/sessions";
 import Button from "@mui/material/Button";
 import { Alert, Snackbar } from "@mui/material";
 

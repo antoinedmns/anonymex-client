@@ -1,7 +1,7 @@
 import { Divider, Stack, Typography } from "@mui/material";
 import { ButtonGererSession, CarteDeSession } from "./composantsSession";
 import { Add, Archive, Download } from "@mui/icons-material";
-import theme from "../../theme/theme";
+import theme from "../../../theme/theme";
 import SessionParentEtape from "./session-modal/creer-session/SessionParentEtape";
 import { useState } from "react";
 
@@ -27,10 +27,10 @@ export default function ComposantSessionPleine({listeSessions, fetchSessions}: P
 
                 <Stack gap={4} flexDirection={'column'} width="80%">
                     <Stack flexDirection={'column'} alignItems="start">
-                        <Typography variant="h4" color={theme.palette.text.secondary} fontWeight="bold">
+                        <Typography variant="h4" fontWeight="bold">
                             Liste des sessions
                         </Typography>
-                        <Typography variant="body1" color={theme.palette.text.secondary}>
+                        <Typography variant="body1" color={theme.palette.text.secondary} mt={1}>
                             Sélectionnez une session en cliquant dessus.
                         </Typography>
                     </Stack>
