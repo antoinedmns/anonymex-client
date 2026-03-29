@@ -1,5 +1,6 @@
-import { Autocomplete, Box, Button, Stack, TextField, Typography } from "@mui/material";
-import React from "react";
+import { Autocomplete, Box, Button, Card, Stack, TextField, Typography } from "@mui/material";
+import { grey } from "@mui/material/colors";
+import React, { useState } from "react";
 
 type AnonymatCardProps = {
     codeAnonymat: string;
@@ -7,75 +8,83 @@ type AnonymatCardProps = {
 
 export default function AnonymatCard({ codeAnonymat }: AnonymatCardProps) {
 
-    const [value, setValue] = React.useState<{ numeroEtudiant: number; nom: string; prenom: string } | null>(null);
-
-    const etudiantsExemple = [
-        { numeroEtudiant: 12345, nom: "Dupont", prenom: "Jean" },
-        { numeroEtudiant: 67890, nom: "Durand", prenom: "Marie" },
-        { numeroEtudiant: 54321, nom: "Martin", prenom: "Pierre" },
-    ];
+    const [inputValue, setInputValue] = useState("");
 
     return (
         <>
-            <Stack direction="row" spacing={2} alignItems="center">
-                {/* Première partie de la carte d'anonymat (code d'anonymat) */}
-                <Typography variant="h6" fontWeight={'bold'}>
-                    {codeAnonymat}
-                </Typography>
+            <Card
+                variant="outlined"
+                sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 2,
+                    p: 2,
+                    borderRadius: 2,
+                    backgroundColor: grey[50],
+                    width: "100%",
+                }}
+            >
+                {/* Partie gauche */}
+                <Stack direction="row" spacing={2} alignItems="center" flex={1}>
+                    <Typography variant="h6" fontWeight="bold" minWidth={100}>
+                        {codeAnonymat}
+                    </Typography>
 
-                {/* Deuxième partie de la carte d'anonymat (étudiant associé) */}
-                <Autocomplete
-                    sx={{ width: 320 }}
-                    options={etudiantsExemple}
-                    value={value}
-                    onChange={(_, newValue) => setValue(newValue)}
+                    <Autocomplete
+                        inputValue={inputValue}
+                        open={inputValue.length > 7} // n'ouvrir l'autocomplete que si la saisie fait plus de 7 caractères (longueur d'un numéro étudiant)
+                        fullWidth
+                        disableClearable
 
-                    // affichage de l'option dans l'input
-                    getOptionLabel={(option) =>
-                        `${option.prenom} ${option.nom}`
-                    }
+                        onInputChange={(_, newInputValue) => {
+                            setInputValue(newInputValue);
+                        }}
 
-                    // vérification de l'égalité entre une option et la valeur sélectionnée (pour éviter les problèmes d'affichage dans l'input)
-                    isOptionEqualToValue={(option, value) =>
-                        option.numeroEtudiant === value.numeroEtudiant
-                    }
 
-                    // Style de rendu pour chaque option du menu déroulant
-                    renderOption={(props, option) => {
-                        const { key, ...optionProps } = props;
+                        options={[]}
 
-                        return (
-                            <Box component="li" key={key} {...optionProps} sx={{ p: 0 }}>
+                        /* Affichage de noOptionsText uniquement si inputValue est défini et > 8 */
+                        noOptionsText={
+                            inputValue.length === 7 ? (
                                 <Box
+                                    onClick={() => {
+                                        console.log(`Ajouter l'étudiant ${inputValue}`);
+                                    }}
                                     sx={{
-                                        display: "flex",
-                                        flexDirection: "column",
-                                        px: 1.5,
-                                        py: 1,
-                                        mx: 1,
-                                        my: 0.5,
-                                        borderRadius: 1,
+                                        cursor: "pointer",
+                                        transition: 'all 0.2s ease',
+
+                                        '&:hover': {
+                                            backgroundColor: 'rgba(0,0,0,0.05)',
+                                        },
+                                        padding: 1,
                                     }}
                                 >
-
-                                    <Typography fontWeight={500}>
-                                        {option.prenom} {option.nom}
-                                    </Typography>
+                                    Ajouter l'étudiant {inputValue}
                                 </Box>
-                            </Box>
-                        );
+                            ) : null
+                        }
+
+                        renderInput={(params) => (
+                            <TextField {...params} label="N°étudiant" size="small" />
+                        )}
+                    />
+                </Stack>
+
+                {/* Bouton */}
+                <Button
+                    variant="contained"
+                    color="success"
+                    sx={{ flexShrink: 0 }} // empêche le bouton de se compresser
+                    onClick={() => {
+                        // TODO : handleClickAssocier (verif input non vide,...)
+                        console.log(`Associer le code d'anonymat ${codeAnonymat} à l'étudiant ${inputValue}`);
                     }}
-
-                    renderInput={(params) => (
-                        <TextField {...params} label="Rechercher un étudiant" />
-                    )}
-                />
-
-                {/* Troisème partie de la carte d'anonymat (bouton de vérification) */}
-                <Button variant="contained" color="success">
-                    Vérifier
-                </Button>
-            </Stack>
+                >
+                    Associer
+                </Button> {/* TODO :Grisé si déjà associé*/}
+            </Card>
         </>
     );
 }
