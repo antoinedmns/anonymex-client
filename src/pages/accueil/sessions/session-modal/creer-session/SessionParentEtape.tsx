@@ -29,6 +29,7 @@ export default function SessionParentEtape({onClose}: Props) {
     const navigate = useNavigate();
 
     const prev = () => setEtape((e) => e - 1);
+    const next = () => setEtape((e) => e + 1);
 
     const handleCreateSession = async () => {
         const response = await createSession({
@@ -36,7 +37,7 @@ export default function SessionParentEtape({onClose}: Props) {
             annee: parseInt(date, 10),
         });
 
-        if (response.status !== 200 || !response.data) {
+        if (response.status < 200 || response.status >= 300 || !response.data) {
             console.error("Erreur lors de la création de la session :", response.error || "Inconnue");
             setErreur(response.error || "Inconnue");
             return;
@@ -77,7 +78,7 @@ export default function SessionParentEtape({onClose}: Props) {
                         date={date}
                         setNomSession={setNomSession}
                         setDate={setDate}
-                        onNext={handleCreateSession}
+                        onNext={next}
                     />
                 )}
 

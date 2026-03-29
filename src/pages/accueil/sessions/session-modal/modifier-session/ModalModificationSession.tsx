@@ -38,8 +38,7 @@ function FormValide(nom: string, annee: string): FormErrors {
 export default function ModalModificationSession({ session, onClose, onSuccess }: Props) {
   const [isLoading, setIsLoading] = React.useState(false);
   const [errors, setErrors] = React.useState<FormErrors>({});
-
-  let message_erreurs = "";
+  const [messageErreurs, setMessageErreurs] = React.useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -62,9 +61,9 @@ export default function ModalModificationSession({ session, onClose, onSuccess }
         annee: parseInt(annee, 10) 
     });
 
-    if (response.status !== 200 || !response.data) { 
+    if (response.status < 200 || response.status >= 300 || !response.data) { 
         console.error("Erreur lors de la modification de la session :", response.error || "Inconnue");
-        message_erreurs = "Erreur lors de la modification de la session :" + (response.error || "Une erreur inconnue est survenue.");
+      setMessageErreurs("Erreur lors de la modification de la session :" + (response.error || "Une erreur inconnue est survenue."));
         setIsLoading(false);
         return; 
     } else { 
@@ -95,9 +94,9 @@ export default function ModalModificationSession({ session, onClose, onSuccess }
       </Stack>
     </Modal>
 
-    <Snackbar open={!!message_erreurs} autoHideDuration={6000} onClose={() => message_erreurs = ""}>
-        <Alert onClose={() => message_erreurs = ""} severity="error" sx={{ width: '100%' }}>
-            {message_erreurs}
+    <Snackbar open={!!messageErreurs} autoHideDuration={6000} onClose={() => setMessageErreurs(null)}>
+      <Alert onClose={() => setMessageErreurs(null)} severity="error" sx={{ width: '100%' }}>
+        {messageErreurs}
         </Alert>
     </Snackbar>
   </>

@@ -23,7 +23,7 @@ export default function ModalArchivageSession({ session, onClose, onSuccess }: P
         // TODO : remplacer deleteSession par un update pour changer le statut de la session en "archivée" au lieu de la supprimer définitivement
         const response = await deleteSession(session.id);
 
-        if (response.status !== 200) {
+        if (response.status < 200 || response.status >= 300) {
             console.error("Erreur lors de l'archivage de la session :", response.error || "Inconnue");
             setIsLoading(false);
             return;

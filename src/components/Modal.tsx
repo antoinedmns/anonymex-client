@@ -27,8 +27,10 @@ export function Modal({ children, onClose, titre, width, height, newbgcolor, idS
         };
     }, []);
 
-    const handleClose = (idSession: string) => {
-        navigate(`/sessions/${idSession}/epreuves`);
+    const handleClose = (idSession?: string) => {
+        if (idSession) {
+            navigate(`/sessions/${idSession}/epreuves`);
+        }
         if (!isVisible) {
             return;
         }
@@ -56,7 +58,7 @@ export function Modal({ children, onClose, titre, width, height, newbgcolor, idS
             <Box borderRadius={2} bgcolor="background.paper" boxShadow={5} sx={{ overflow: "hidden" }}>
                 <Stack direction="row" justifyContent="space-between" alignItems="center" bgcolor={newbgcolor ?? colors.blue[100]} p={1} gap={4}>
                     <Typography variant="h6" ml={2} my={1}>{titre}</Typography>
-                    {onClose && <IconButton onClick={() => handleClose(idSession!)} size="large"><Close /></IconButton>}
+                    {onClose && <IconButton onClick={() => handleClose(idSession)} size="large"><Close /></IconButton>}
                 </Stack>
                 <Box width={width ?? "100%"} height={height ?? "100%"} >
                     {children}

@@ -28,7 +28,7 @@ export default function PageSession() {
 
     async function fetchSessions() {
         const response = await getSessions();
-        if (response.status !== 200 || !response.data) {
+        if (response.status < 200 || response.status >= 300 || !response.data) {
             console.error("Erreur :", response.error || "Inconnue");
             setSnackbar({ message: (response.error? response.error : "Erreur Inconnue"), severity: "error" });
             return;
@@ -42,8 +42,6 @@ export default function PageSession() {
     useEffect(() => {
         fetchSessions();
     }, []);
-
-    console.log("sessions :", listeSession);
 
     return (
         <Stack flexDirection={'column'} margin={5}>
