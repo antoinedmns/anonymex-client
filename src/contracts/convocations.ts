@@ -51,3 +51,7 @@ export const patchConvocationSupplementaire = (sessionId: number, epreuveCode: s
 export const postConvocationPresents = (sessionId: number, epreuveCode: string, nbPresents: number) => {
     return apiRequest<{ nbPresents: number }, APIBoolResponse>('POST', `/sessions/${sessionId}/epreuves/${epreuveCode}/presents`, { nbPresents });
 }
+
+export const postConvocationsTransfert = (sessionId: number, epreuveCode: string, data: { sallesDepart?: string[], codesAnonymats?: string[], salleTransfert: string }) => {
+    return apiRequest<{ sallesDepart?: string[], codesAnonymats?: string[], salleTransfert: string }, APIBoolResponse>('POST', `/sessions/${sessionId}/epreuves/${epreuveCode}/transfert`, data);
+}

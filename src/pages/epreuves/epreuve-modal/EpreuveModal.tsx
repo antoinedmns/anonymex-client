@@ -18,6 +18,7 @@ import { colors, Stack } from "@mui/material";
 import { themeEpreuves } from "../../../theme/epreuves";
 import { MenuScanCopies } from "./menu-modal/MenuScanCopies";
 import { BrowserRouter } from "react-router-dom";
+import MenuPresence from "./menu-modal/MenuPresence";
 
 
 export interface EpreuveModalProps {
@@ -30,14 +31,17 @@ export interface EpreuveModalProps {
 export function EpreuveModal({ epreuve, sessionId, tab, nbIncidents }: EpreuveModalProps) {
     const { fermer } = useModal();
 
-    const [numeroOnglet, setNumeroOnglet] = useState<0 | 1 | 2 | 3>(0);
+    const [numeroOnglet, setNumeroOnglet] = useState<0 | 1 | 2 | 3 | 4>(0);
 
-    const handleChange = (_event: React.SyntheticEvent, newValue: 0 | 1 | 2 | 3) => {
+    const handleChange = (_event: React.SyntheticEvent, newValue: 0 | 1 | 2 | 3 | 4) => {
         setNumeroOnglet(newValue);
     };
 
     // Gestion route pour ouvrir le modal sur un onglet précis
     useEffect(() => {
+        if (tab === "presence") {
+            setNumeroOnglet(4);
+        }
         if (tab === "scan") {
             setNumeroOnglet(2);
         }
@@ -71,11 +75,13 @@ export function EpreuveModal({ epreuve, sessionId, tab, nbIncidents }: EpreuveMo
                             {epreuve.statut === 3 && <Tab label="Scanner copies" />}
                             {epreuve.statut >= 3 && nbIncidents !== undefined && nbIncidents > 0 && <Tab label={`Incidents (${nbIncidents})`} />}
                             {epreuve.statut >= 4 && <Tab label="Exporter les notes" />}
+                            <Tab label="Présence" />
                         </Tabs>
                     </Stack>
                     <Stack width={"100%"} padding={2} height={"100%"} justifyContent={"center"}>
                         {numeroOnglet === 0 && <DetailsEpreuve epreuve={epreuve} />}
                         {numeroOnglet === 1 && <MenuListeEtudiants statut={epreuve.statut} menuColor={epreuve.statut == 1 ? undefined : themeEpreuves.status[epreuve.statut]} />}
+                        {numeroOnglet === 3 && <MenuPresence epreuve={epreuve} />}
 
                         {numeroOnglet === 2 && epreuve.statut <= 2 && <MenuGenererMatExam menuColor={themeEpreuves.status[epreuve.statut]} idSession={sessionId} codeEpreuve={epreuve.code} />}
                         {numeroOnglet === 2 && epreuve.statut >= 3 && <MenuScanCopies codeUE={epreuve.code} idSession={sessionId} menuColor={themeEpreuves.status[epreuve.statut]} />}
