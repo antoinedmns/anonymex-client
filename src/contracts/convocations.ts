@@ -29,6 +29,10 @@ export const getConvocations = (sessionId: number, epreuveCode: string) => {
     return apiRequest<null, APIListeConvocations>('GET', `/sessions/${sessionId}/epreuves/${epreuveCode}/convocations`);
 }
 
+export const getConvocationsSupplementaires = (sessionId: number, epreuveCode: string) => {
+    return apiRequest<null, APIListeConvocations>('GET', `/sessions/${sessionId}/epreuves/${epreuveCode}/convocations/supplementaires`);
+}
+
 export const deleteConvocations = (sessionId: number, epreuveCode: string, codesAnonymats: string[]) => {
     return apiRequest<{ codesAnonymats: string[] }, APIBoolResponse>('DELETE', `/sessions/${sessionId}/epreuves/${epreuveCode}/convocations`, { codesAnonymats });
 }
@@ -37,6 +41,10 @@ export const patchConvocation = (sessionId: number, epreuveCode: string, codeAno
     return apiRequest<APIUpdateConvocation, APIUpdateConvocation>('PATCH', `/sessions/${sessionId}/epreuves/${epreuveCode}/convocations/${codeAnonymat}`, data);
 }
 
+export const patchConvocationSupplementaire = (sessionId: number, epreuveCode: string, codeAnonymat: string, data: { numeroEtudiant: number }) => {
+    return apiRequest<{ numeroEtudiant: number }, APIBoolResponse>('PATCH', `/sessions/${sessionId}/epreuves/${epreuveCode}/convocations/supplementaires/${codeAnonymat}`, data);
+}
+
 export const postConvocationPresents = (sessionId: number, epreuveCode: string, nbPresents: number) => {
-    return apiRequest<{nbPresents: number}, APIBoolResponse>('POST', `/sessions/${sessionId}/epreuves/${epreuveCode}/presents`, { nbPresents });
+    return apiRequest<{ nbPresents: number }, APIBoolResponse>('POST', `/sessions/${sessionId}/epreuves/${epreuveCode}/presents`, { nbPresents });
 }
