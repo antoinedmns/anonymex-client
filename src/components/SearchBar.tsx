@@ -40,7 +40,7 @@ function formatResultat(option: RechercheResultat): string {
         case 1:
             return `Salle : ${option.codeSalle}`;
         case 2:
-            return `Date : ${formatterDateEntiere(+option.horodatage)}`; // Todo : formater l'heure de manière plus lisible
+            return `Date : ${formatterDateEntiere(+option.horodatage)}`;
         case 3:
             return `Salle : ${option.codeSalle}, le ${formatterDateEntiere(+option.horodatage)}`;
         case 4:
@@ -51,12 +51,6 @@ function formatResultat(option: RechercheResultat): string {
             return 'Résultat inconnu';
     }
 }
-
-// Todo :
-// Pour les resultats de la search bar (maximum 5 affichés)
-// Le dernier élément est une option "Voir tous les résultats" qui redirige vers une page de résultats de recherche complète.
-// Ajout d'une icone loupe dans la barre de recherche, qui renvoie également vers la page de résultats de recherche complète (avec le terme de recherche déjà rempli).
-
 
 function SearchBar(props: SearchBarProps) {
 
@@ -132,7 +126,7 @@ function SearchBar(props: SearchBarProps) {
             <Tooltip title="Changer de session">
                 <Button startIcon={<LeftArrow />}
                     onClick={handleBackToSessions}
-                    variant='outlined'
+                    variant="text"
                     sx={{ alignSelf: 'stretch' }}
                 >Retour Accueil</Button>
             </Tooltip>
@@ -240,7 +234,7 @@ function SearchBar(props: SearchBarProps) {
                 renderInput={(params) => (
                     <TextField
                         {...params}
-                        placeholder="Rechercher une épreuve, une salle, une heure, une action ou un étudiant"
+                        placeholder="Recherche : épreuve, salle, horaire ou étudiant"
                         slotProps={{
                             input: {
                                 ...params.InputProps,
@@ -248,14 +242,19 @@ function SearchBar(props: SearchBarProps) {
                                     <>
                                         {params.InputProps.endAdornment}
 
-                                        <IconButton sx={{ p: '10px' }} aria-label="search">
-                                            <Search />
-                                        </IconButton>
+                                        <Tooltip title="Rechercher">
+                                            <IconButton sx={{ p: '10px' }} aria-label="search" >
+                                                <Search />
+                                            </IconButton>
+                                        </Tooltip>
 
                                         <Divider sx={{ height: 28, m: 0.5 }} orientation="vertical" />
-                                        <IconButton sx={{ p: '10px' }} aria-label="search">
-                                            <FormatListBulleted />
-                                        </IconButton>
+
+                                        <Tooltip title="Afficher la liste">
+                                            <IconButton sx={{ p: '10px' }} aria-label="search">
+                                                <FormatListBulleted />
+                                            </IconButton>
+                                        </Tooltip>
                                     </>
                                 ),
                             },
