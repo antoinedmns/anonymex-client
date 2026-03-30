@@ -3,31 +3,32 @@ import IncidentListe from "./IncidentListe";
 import IncidentDetail from "./IncidentDetail";
 import { useState } from "react";
 
-import type { APIIncident, APIListIncidents } from '../../../../../contracts/incidents';
+import type { APIIncident } from '../../../../../contracts/incidents';
 import { getIncidents } from "../../../../../contracts/incidents";
 import { useEffect } from "react";
-import { set } from "zod";
 
 
 interface IncidentsCompletsProps {
     idSession: number;
     epreuveCode: string;
+    onIncidentCreated?: () => void;
+    onIncidentResolved?: () => void;
 }
 
-export function IncidentsComplets(props: IncidentsCompletsProps) {
+export function IncidentsComplets({ idSession, epreuveCode, onIncidentCreated, onIncidentResolved }: IncidentsCompletsProps) {
 
     const [allIncidents, setAllIncidents] = useState<APIIncident[]>([]);
     const [selectedIncident, setSelectedIncident] = useState<APIIncident | null>(null);
     const [selectedIncidentId, setSelectedIncidentId] = useState<number | null>(null);
 
-    const [ouvertSucces, setOuvertSucces] = useState(false);
-    const [ouvertEchec, setOuvertEchec] = useState(false);
-    const [messageSnackbar, setMessageSnackbar] = useState("");
+    const [, setOuvertSucces] = useState(false);
+    const [, setOuvertEchec] = useState(false);
+    const [, setMessageSnackbar] = useState("");
 
     useEffect(() => {
         const getAllIncidents = async () => {
             try {
-                const response = await getIncidents(props.idSession, props.epreuveCode);
+                const response = await getIncidents(idSession, epreuveCode);
                 console.log("Incidents récupérés :", response);
                 if (response.data?.incidents) {
                     setAllIncidents(response.data.incidents);
@@ -39,7 +40,7 @@ export function IncidentsComplets(props: IncidentsCompletsProps) {
         };
 
         getAllIncidents();
-    }, [props.idSession, props.epreuveCode]);
+    }, [idSession, epreuveCode]);
 
     const handleClickIncident = (incident: APIIncident) => {
         setSelectedIncident(incident);
@@ -48,11 +49,24 @@ export function IncidentsComplets(props: IncidentsCompletsProps) {
 
 
     const ajouterIncident = (incident: APIIncident) => {
-        setAllIncidents((prev) => [...prev, incident]);
+        setAllIncidents((prev) => {
+            if (prev.some((item) => item.idIncident === incident.idIncident)) {
+                return prev;
+            }
+
+            onIncidentCreated?.();
+            return [...prev, incident];
+        });
     }
 
     const retirerIncident = (idIncident: number) => {
-        setAllIncidents((prev) => prev.filter(incident => incident.idIncident !== idIncident));
+        setAllIncidents((prev) => {
+            const next = prev.filter(incident => incident.idIncident !== idIncident);
+            if (next.length < prev.length) {
+                onIncidentResolved?.();
+            }
+            return next;
+        });
     }
 
 

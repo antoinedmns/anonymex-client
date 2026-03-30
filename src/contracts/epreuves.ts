@@ -19,7 +19,7 @@ export const EpreuveSchema = z.object({
     nom: z.string(),
     statut: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5)]),
     salles: z.array(z.string()),
-    date: z.number().int().positive(), // timestamp en secondes depuis epoch
+    date: z.number().int().positive(), // timestamp depuis epoch en millisecondes
     duree: z.number().int().positive(), // durée en minutes
     copies: z.number().int().nonnegative().optional(), // nombre de copies déposées
     inscrits: z.number().int().positive().optional(), // nombre total de copies attendues

@@ -1,8 +1,9 @@
 import { Alert, Box, Button, Divider, Snackbar, Stack, Tab, Tabs, TextField, Typography } from '@mui/material';
 import { type APIEpreuve } from '../../../../contracts/epreuves';
-import AnonymatCard from './composantsPresence/AnonymatCard';
-import { getConvocationsSupplementaires, postConvocationPresents, type APIConvocationsSupplementairesMap, type APIListeConvocations } from '../../../../contracts/convocations';
+import AnonymatCard from './composantsPresence/CodeSupplementaireCarte';
+import { getConvocationsSupplementaires, postConvocationPresents, type APIConvocationsSupplementairesMap } from '../../../../contracts/convocations';
 import React from 'react';
+import { Check, Update } from '@mui/icons-material';
 
 type MenuPresenceProps = {
     epreuve: APIEpreuve;
@@ -17,16 +18,29 @@ export default function MenuPresence({ epreuve }: MenuPresenceProps) {
     const [inputNbPresents, setInputNbPresents] = React.useState<number>(epreuve.nbPresents || 0);
 
     // Gestion des erreurs pour le nombre de présents (négatif ou erreur API)
-    const[nbPresentError, setNbPresentError] = React.useState<string | null>(null);
+    const [nbPresentError, setNbPresentError] = React.useState<string | null>(null);
 
     // Snackbar de succès ou d'erreur pour la confirmation du nombre de présents
     const [successMajPresents, setSuccessMajPresents] = React.useState<boolean | null>(null);
 
-    async function handleConfirmPresence(){
+    // UseState pour affichage du champ de saisie
+    const [showInput, setShowInput] = React.useState(epreuve.nbPresents === undefined);
+
+    // Gestion des erreurs pour chaque code d'anonymat supplémentaire (clé : codeAnonymat)
+    const [anonymatErrors, setAnonymatErrors] = React.useState<string | null>(null);
+
+    function handleMajPresence() {
+        setShowInput(true);
+        epreuve.nbPresents = undefined;
+    }
+
+    async function handleConfirmPresence() {
 
         // On remet à zéro les erreurs à chaque confirmation
         setNbPresentError(null);
         setSuccessMajPresents(null);
+        setShowInput(false);
+
 
         console.log("Nombre de présents à confirmer :", inputNbPresents);
 
@@ -97,17 +111,17 @@ export default function MenuPresence({ epreuve }: MenuPresenceProps) {
 
     return (
         <>
-            <Stack direction="column" spacing={4} justifyContent={'space-evenly'} padding={4} width={"100%"}>
-
-                <Stack direction="row" spacing={2} alignItems="flex-start">
-                    <Typography variant="h6" color="textSecondary" fontWeight={'light'}>
+            <Stack direction={"row"} spacing={8} justifyContent={'space-evenly'} alignItems={'stretch'} width={'100%'} padding={4}>
+                {/* Partie gauche du menu de présence (Input et confirmation ) */}
+                <Stack direction="column" spacing={2} alignItems="stretch" width={'40%'}>
+                    <Typography variant="body1" color="textSecondary" fontWeight={'regular'} alignSelf={'center'}>
                         Nombre d'étudiants présents pour l'épreuve {epreuve.code} :
                     </Typography>
 
-                    {epreuve.nbPresents ? (
+                    {!showInput ? (
                         // Affichage du nombre de présents actuel si déjà renseigné
-                        <Typography variant="h6" fontWeight={'bold'}>
-                            {epreuve.nbPresents && epreuve.inscrits ? ` ${epreuve.nbPresents} / ${epreuve.inscrits}` : " Non renseigné"}
+                        <Typography variant="h6" fontWeight={'bold'} alignSelf={'center'}>
+                            {epreuve.nbPresents ? `${epreuve.nbPresents}` : " Non renseigné"}
                         </Typography>
                     ) :
                         // Sinon affichage du champ de saisie
@@ -124,80 +138,98 @@ export default function MenuPresence({ epreuve }: MenuPresenceProps) {
                             error={!!nbPresentError}
                         />
                     }
-                    <Button variant="contained" color="primary" onClick={handleConfirmPresence}>
-                        Confirmer
-                    </Button>
+                    {epreuve.nbPresents === undefined && (
+                        <Button variant="contained" color="primary" onClick={handleConfirmPresence} startIcon={<Check />}>
+                            Confirmer
+                        </Button>
+                    )}
 
-                    <Button variant="outlined" color="secondary" onClick={fetchCodesAnonymatSupplementaires}>
-                        Mettre à jour
-                    </Button>
+                    {epreuve.nbPresents !== undefined && (
+                        <Button variant="outlined" color="secondary" onClick={handleMajPresence} startIcon={<Update />}>
+                            Mettre à jour
+                        </Button>
+                    )}
                 </Stack>
 
-                <Divider orientation="horizontal" flexItem />
+                <Divider orientation="vertical" flexItem />
 
-                <Stack direction={"row"} spacing={4} justifyContent={'space-evenly'} alignItems={'stretch'} width={'100%'}>
-                    {/* Partie gauche du menu de présence (Input et confirmation ) */}
-                    <Tabs
-                        orientation='vertical'
-                        variant='scrollable'
-                        value={salleTabs}
-                        onChange={handleChangeSalle}
-                        sx={{ borderRight: 1, 
-                            borderColor: 'divider', 
-                            height: '100%',
-                            minWidth: 200,
-                        }}
-                    >
-                        {epreuve.salles.map((salle, index) => (
-                            <Tab 
-                                key={salle} 
-                                label={salle}
-                            />
-                        ))}
+                <Stack direction="row" spacing={4} alignItems="stretch" width={'100%'}>
+                    <Stack direction="column" spacing={4} width={'20%'}>
+                        <Tabs
+                            orientation='vertical'
+                            variant='scrollable'
+                            value={salleTabs}
+                            onChange={handleChangeSalle}
+                            sx={{
+                                borderRight: 1,
+                                borderColor: 'divider',
+                                maxHeight: 400,
+                            }}
+                        >
+                            {epreuve.salles.map((salle, index) => (
+                                <Tab
+                                    key={salle}
+                                    label={salle}
+                                />
+                            ))}
 
-                    </Tabs>
+                        </Tabs>
+                    </Stack>
 
                     {epreuve.salles.map((salle, index) => (
-                        <Box key={salle} 
-                            role="tabpanel" 
-                            id={`vertical-tabpanel-${index}`} 
-                            aria-labelledby={`vertical-tab-${index}`} 
-                            sx={{ width: '100%', 
-                                flexDirection: 'row', 
-                                justifyContent: 'space-between', 
+                        <Box key={salle}
+                            role="tabpanel"
+                            id={`vertical-tabpanel-${index}`}
+                            aria-labelledby={`vertical-tab-${index}`}
+                            sx={{
+                                width: '100%',
+                                flexDirection: 'row',
+                                justifyContent: 'space-between',
                                 display: salleTabs === index ? 'flex' : 'none',
-                               
-                                }}
-                                >
+
+                            }}
+                        >
 
                             {/* Partie droite du menu de présence (Codes d'anonymat supplémentaires) */}
-                            <Stack direction="column" spacing={2} alignItems="flex-start" width={"75%"}>
+                            <Box width={"100%"}>
                                 <Typography variant="h5" fontWeight={'bold'}>
                                     Codes d'anonymat supplémentaires
                                 </Typography>
-                                <Typography variant="body1" color="textSecondary">
+                                <Typography variant="body1" color="textSecondary" mb={3}>
                                     Associer chaque code d'anonymat supplémentaire attribué à un étudiant :
                                 </Typography>
 
                                 {/* TODO : Afficher la liste des codes d'anonymat supplémentaires avec un champ de saisie pour associer un étudiant (peut-être un select/autocomplete avec les étudiants de la session ou inscrits à l'epreuve ?) */}
-                                <Stack direction="column" spacing={1} alignItems="flex-start" width={"100%"}>
+                                <Stack direction="column" spacing={1} alignItems="flex-start" width={"100%"} overflow={'y-scroll'} maxHeight={400} paddingRight={1}>
 
-                                    {convocations.map((convoc) => (
-                                        <AnonymatCard key={convoc.codeAnonymat + convoc.idSession} codeAnonymat={convoc.codeAnonymat} />
-                                    ))}
+                                    {convocations.length > 0 ? convocations.map((convoc) => (
+                                        <AnonymatCard key={convoc.codeAnonymat + convoc.idSession} codeAnonymat={convoc.codeAnonymat} OnError={setAnonymatErrors} />
+                                    )) : (
+                                        <Alert severity="info" sx={{ width: '100%' }}>
+                                            Aucun code d'anonymat supplémentaire pour la salle {salle}.
+                                        </Alert>
+                                    )}
                                 </Stack>
-                            </Stack>
+                            </Box>
                         </Box>
                     ))}
                 </Stack>
-            </Stack>
+            </Stack>    
 
             {successMajPresents !== null && (
-            <Snackbar open={true} autoHideDuration={6000} onClose={() => setSuccessMajPresents(null)}>
-                <Alert severity={successMajPresents ? "success" : "error"} sx={{ width: '100%' }}>
-                    {successMajPresents ? "Nombre de présents mis à jour avec succès !" : "Erreur lors de la mise à jour du nombre de présents."}
-                </Alert>
-            </Snackbar>
+                <Snackbar open={true} autoHideDuration={6000} onClose={() => setSuccessMajPresents(null)}>
+                    <Alert severity={successMajPresents ? "success" : "error"} sx={{ width: '100%' }}>
+                        {successMajPresents ? "Nombre de présents mis à jour avec succès !" : "Erreur lors de la mise à jour du nombre de présents."}
+                    </Alert>
+                </Snackbar>
+            )}
+
+            {anonymatErrors && (
+                <Snackbar open={true} autoHideDuration={6000} onClose={() => setAnonymatErrors(null)}>
+                    <Alert severity="error" sx={{ width: '100%' }}>
+                        {anonymatErrors}
+                    </Alert>
+                </Snackbar>
             )}
         </>
     );

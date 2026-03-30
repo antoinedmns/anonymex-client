@@ -11,6 +11,8 @@ import { formatterDateEntiere } from '../utils/dateUtils';
 
 interface SearchBarProps {
     onResultClick?: (epreuve: APIEpreuve) => void;
+    handleBack?: () => void;
+    nomHandleBack?: string;
     sessionId: number;
     sessionName?: string;
 }
@@ -91,6 +93,9 @@ function SearchBar(props: SearchBarProps) {
                 break;
 
             // Action
+            case 4:
+                if (option.action === 1) {
+                }
             // Todo : implémenter la page de résultats de recherche pour les actions
         }
     }
@@ -113,7 +118,7 @@ function SearchBar(props: SearchBarProps) {
 
     const navigate = useNavigate();
 
-    function handleBackToSessions() {
+    function handleBackToAccueil() {
         navigate('/accueil');
     }
 
@@ -125,10 +130,10 @@ function SearchBar(props: SearchBarProps) {
             {/* Todo : remplacer par le nom de la session courante cf. EpreuvesPage.tsx */}
             <Tooltip title="Changer de session">
                 <Button startIcon={<LeftArrow />}
-                    onClick={handleBackToSessions}
+                    onClick={props.handleBack ? props.handleBack : handleBackToAccueil}
                     variant="text"
                     sx={{ alignSelf: 'stretch' }}
-                >Retour Accueil</Button>
+                >{props.nomHandleBack ? props.nomHandleBack : "Retour à l'accueil"}</Button>
             </Tooltip>
 
             <Autocomplete
