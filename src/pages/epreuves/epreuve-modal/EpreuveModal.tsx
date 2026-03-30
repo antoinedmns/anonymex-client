@@ -32,6 +32,7 @@ export function EpreuveModal({ codeEpreuve, sessionId, tab }: EpreuveModalProps)
     const [numeroOnglet, setNumeroOnglet] = useState(0);
     const incidentsCount = epreuveActive?.incidents ?? 0;
     const [salleDefault, setSalleDefault] = useState<string>("x");
+    const [salleDefaultNumb, setSalleDefaultNumb] = useState<number>(0);
 
     const handleChange = (_event: React.SyntheticEvent, newValue: number) => {
         setNumeroOnglet(newValue);
@@ -87,7 +88,7 @@ export function EpreuveModal({ codeEpreuve, sessionId, tab }: EpreuveModalProps)
 
             {
                 label: "Présence",
-                content: <MenuPresence epreuve={epreuveActive} />
+                content: <MenuPresence epreuve={epreuveActive} salleDefault={salleDefault} />
             },
 
             ...(epreuveActive.statut >= 3 && incidentsCount > 0 ? [{

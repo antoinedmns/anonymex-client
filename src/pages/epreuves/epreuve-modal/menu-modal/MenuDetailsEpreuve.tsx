@@ -28,6 +28,7 @@ export interface DetailsEpreuveProps {
     epreuve: APIEpreuve;
     setNumeroOnglet: (value: 0 | 1 | 2 | 3 | 4) => void;
     setSalleDefault: (value: string) => void;
+    setSalleDefaultNumb: (value: number) => void;
 }
 
 function calcHoraires(date: number, dureeMinutes: number): string {
@@ -48,7 +49,7 @@ function formatDate(date: number): string {
 
 
 
-function DetailsEpreuve({ epreuve, setNumeroOnglet, setSalleDefault }: DetailsEpreuveProps) {
+function DetailsEpreuve({ epreuve, setNumeroOnglet, setSalleDefault, setSalleDefaultNumb }: DetailsEpreuveProps) {
 
     const [modifEpreuve, setModifEpreuve] = React.useState<boolean>(false);
     const [modifDate, setModifDate] = React.useState<boolean>(false);
@@ -238,8 +239,10 @@ function DetailsEpreuve({ epreuve, setNumeroOnglet, setSalleDefault }: DetailsEp
         }
     };
 
-    const handleAjout = () => {
+    const handleAjout = (salle: string) => {
         console.log("Ajout demandé");
+        //setSalleDefaultNumb(salles.findIndex(s => s.nom === salle) ?? 0);
+        setNumeroOnglet(3);
     }
 
     const handleDetails = (salle: string) => {

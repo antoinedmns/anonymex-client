@@ -7,9 +7,10 @@ import { Check, Update } from '@mui/icons-material';
 
 type MenuPresenceProps = {
     epreuve: APIEpreuve;
+    salleDefaultNumb: number;
 }
 
-export default function MenuPresence({ epreuve }: MenuPresenceProps) {
+export default function MenuPresence({ epreuve, salleDefaultNumb }: MenuPresenceProps) {
 
     // Liste des convocations supplémentaires, organisée par salle
     const [listeConvoc, setListeConvoc] = React.useState<APIConvocationsSupplementairesMap>();
@@ -97,7 +98,7 @@ export default function MenuPresence({ epreuve }: MenuPresenceProps) {
     // Tabs
 
     // UseState pour la valeur de chaque salle de l'épreuve
-    const [salleTabs, setsalleTabs] = React.useState(0);
+    const [salleTabs, setsalleTabs] = React.useState(salleDefaultNumb || 0);
 
     // Fonction pour gérer le changement de tab
     const handleChangeSalle = (_: React.SyntheticEvent, newValue: number) => {
@@ -214,7 +215,7 @@ export default function MenuPresence({ epreuve }: MenuPresenceProps) {
                         </Box>
                     ))}
                 </Stack>
-            </Stack>    
+            </Stack>
 
             {successMajPresents !== null && (
                 <Snackbar open={true} autoHideDuration={6000} onClose={() => setSuccessMajPresents(null)}>

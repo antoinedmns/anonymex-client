@@ -15,7 +15,7 @@ interface EpreuveSallesCompoProps {
     nbEtuMMax: number;
     color?: string;
     onTransfert: (sallesDepart: string[], salleArrivee: string) => void;
-    onAjouter: () => void;
+    onAjouter: (salle: string) => void;
     onDetails: (salle: string) => void;
 }
 
@@ -75,7 +75,7 @@ function EpreuveSallesCompo({ salle, nbEtudiants, nbEtuMMax, color, onTransfert,
                         </MenuItem>
                     ))}
                 </Menu>
-                <IconRondV2 sx={{ bgcolor: color + "60", '&:hover': { bgcolor: color + "AF" } }} children={<Add />} tooltip="Ajouter étudiants" />
+                <IconRondV2 onClickParam={() => onAjouter(salle)} sx={{ bgcolor: color + "60", '&:hover': { bgcolor: color + "AF" } }} children={<Add />} tooltip="Ajouter étudiants" />
                 <IconRondV2 onClickParam={() => onDetails(salle)} sx={{ bgcolor: color + "60", '&:hover': { bgcolor: color + "AF" } }} children={<MenuIcon />} tooltip="Détails" />
             </Stack>
 
