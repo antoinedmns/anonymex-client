@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, useTransition, type ReactElement } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getEpreuves, type APIEpreuve, type APIListEpreuves } from "../../contracts/epreuves";
+import { type APIEpreuve } from "../../contracts/epreuves";
 import { Box, Divider, Snackbar, Stack, Typography, Alert, Button } from "@mui/material";
 import { useSnackbarGlobal } from "../../contexts/SnackbarContext";
 import { EpreuveCard } from "./EpreuveCard";
@@ -16,7 +16,7 @@ import BoutonImportant from "./epreuve-modal/components/BoutonImportant";
 import { BordereauxModal } from "./epreuve-modal/BordereauxModal";
 import DocumentScannerIcon from '@mui/icons-material/DocumentScanner';
 import { ScanModal } from "./epreuve-modal/ScanModal"
-import { getIncidents } from "../../contracts/incidents";
+import { useEpreuvesCache } from "../../contexts/EpreuvesCacheContext";
 
 export type SortOption = "chronologique" | "inverse-chronologique";
 
@@ -25,16 +25,12 @@ export default function EpreuvesPage(): ReactElement {
 
     console.log("Rendu de EpreuvesPage");
 
-    const [listeEpreuves, setListeEpreuves] = useState<APIListEpreuves>({ epreuvesAvenir: [], epreuvesPassees: [] });
-    const [estChargement, setEstChargement] = useState(false);
+    const { epreuves: listeEpreuves, estChargement, erreurChargement } = useEpreuvesCache();
 
     // Filtres et tri
     const [typeEpreuve, setTypeEpreuve] = useState<'passees' | 'aVenir'>('aVenir');
     const [filtreStatut, setFiltreStatut] = useState<number | null>(null); // null => tout afficher
     //const [optionTri] = useState<SortOption>("chronologique");
-
-    // Compteurs des éléments par statut
-    const [statutMap, setStatutMap] = useState<Map<number, number>>(new Map());
 
     // Transitions afin de fluidifier les mises à jour d'état
     const [, demarrerTransition] = useTransition();
@@ -52,9 +48,6 @@ export default function EpreuvesPage(): ReactElement {
     const [openSnackbar, setOpenSnackbar] = useState<boolean>(false)
     const [codeScan, setCodeScan] = useState<string>("");
 
-    // nbIncidents 
-    const [nbIncidents, setNbIncidents] = useState<number>(0);
-
     // Modal
     const { ouvrir } = useModal();
 
@@ -65,36 +58,17 @@ export default function EpreuvesPage(): ReactElement {
     const { sessionId } = useParams<{ sessionId: string }>();
 
 
-    // Charger les épreuves depuis l'API
     useEffect(() => {
-        setEstChargement(true);
-        async function chargerEpreuves() {
-            const reponse = await getEpreuves(parseInt(sessionId ?? '-1'));
-            if (reponse.data && reponse.status === 200) {
-                // Chargement réussi
-                /*const compteursStatus = new Map<number, number>();
-                for (const epreuveType of [reponse.data.epreuvesAvenir, reponse.data.epreuvesPassees]) {
-                    for (const epreuve of epreuveType) {
-                        compteursStatus.set(epreuve.statut, (compteursStatus.get(epreuve.statut) ?? 0) + 1);
-                    }
-                }
-                setStatutMap(compteursStatus); */
-                setListeEpreuves(reponse.data);
-            } else {
-                // Erreur lors du chargement
-                afficherErreur("Impossible de charger les épreuves : " + (reponse.error ?? "Erreur inconnue"));
-                setListeEpreuves({ epreuvesAvenir: [], epreuvesPassees: [] });
-            }
-            setEstChargement(false);
+        if (erreurChargement) {
+            afficherErreur("Impossible de charger les épreuves : " + erreurChargement);
         }
-        chargerEpreuves();
-    }, [afficherErreur, sessionId]);
+    }, [afficherErreur, erreurChargement]);
 
 
     // lorsqu'une épreuve est cliquée : afficher modal
-    const handleEpreuveClick = useCallback(async (epreuve: APIEpreuve) => {
+    const handleEpreuveClick = useCallback((epreuve: APIEpreuve) => {
         if (sessionId === undefined) return;
-        ouvrir(<EpreuveModal epreuve={epreuve} sessionId={sessionId} nbIncidents={epreuve.incidents} />);
+        ouvrir(<EpreuveModal codeEpreuve={epreuve.code} sessionId={sessionId} />);
     }, [ouvrir, sessionId]);
 
     // lorsque le filtre de type d'épreuve change
@@ -113,7 +87,7 @@ export default function EpreuvesPage(): ReactElement {
     };
 
     // calculer les épreuves à afficher selon les filtres et le tri
-    const epreuvesAffichees = useMemo(() => {
+    const { epreuvesAffichees, statutMap } = useMemo(() => {
         const epreuvesSource = typeEpreuve === 'aVenir' ? listeEpreuves.epreuvesAvenir : listeEpreuves.epreuvesPassees;
 
         //const triSens = optionTri === 'chronologique' ? 1 : -1;
@@ -139,9 +113,7 @@ export default function EpreuvesPage(): ReactElement {
             resultat.push(epreuve);
         }
 
-        setStatutMap(compteursStatus);
-
-        return resultat;
+        return { epreuvesAffichees: resultat, statutMap: compteursStatus };
     }, [listeEpreuves, typeEpreuve, filtreStatut]);
 
 

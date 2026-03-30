@@ -7,6 +7,7 @@ import PageInscription from './pages/authentification/signup/PageInscription'
 import PageConnexion from './pages/authentification/login/PageConnexion'
 import PageSession from './pages/accueil/PageAccueil'
 import RecherchePage from './pages/epreuves/RecherchePage'
+import SessionEpreuvesProviderRoute from './pages/epreuves/SessionEpreuvesProviderRoute'
 
 function App() {
   return (
@@ -19,11 +20,11 @@ function App() {
       { /* Sessions*/}
       <Route path="/accueil" element={<PageSession />} />
 
-      { /* Examens/épreuves */}
-      <Route path="/sessions/:sessionId/epreuves" element={<EpreuvesPage />} />
-
-      { /* Recherche */}
-      <Route path="/sessions/:sessionId/recherche/:type/:value1/:value2?" element={<RecherchePage />} />
+      { /* Examens/épreuves + recherche (cache session) */}
+      <Route path="/sessions/:sessionId/*" element={<SessionEpreuvesProviderRoute />}>
+        <Route path="epreuves" element={<EpreuvesPage />} />
+        <Route path="recherche/:type/:value1/:value2?" element={<RecherchePage />} />
+      </Route>
 
       { /* Autre */}
       <Route path="/tests" element={<TestsAPI />} />

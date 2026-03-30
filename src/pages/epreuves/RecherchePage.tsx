@@ -12,6 +12,7 @@ import { DoDisturb, Public } from '@mui/icons-material';
 import { EpreuveCard } from './EpreuveCard';
 import { EpreuveModal } from './epreuve-modal/EpreuveModal';
 import { useModal } from '../../contexts/ModalContext';
+import { useEpreuvesCache } from '../../contexts/EpreuvesCacheContext';
 
 export default function RecherchePage(): ReactElement {
 
@@ -34,14 +35,15 @@ export default function RecherchePage(): ReactElement {
 
     // Modal
     const { ouvrir } = useModal();
+    const { getEpreuveByCode, upsertEpreuve } = useEpreuvesCache();
 
     // Ouvre le modal de l'épreuve cliquée
     const handleEpreuveClick = useCallback((epreuve: APIEpreuve) => {
         if (sessionId === undefined) return;
-        ouvrir(<EpreuveModal epreuve={epreuve} sessionId={sessionId} tab={"details"} />);
+        ouvrir(<EpreuveModal codeEpreuve={epreuve.code} sessionId={sessionId} tab={"details"} />);
     }, [ouvrir, sessionId]);
 
-    async function fetchData() {
+    const fetchData = useCallback(async () => {
         if (!sessionId || !type || !value1) return;
 
         try {
@@ -82,13 +84,22 @@ export default function RecherchePage(): ReactElement {
                 return;
             }
 
-            const res_epreuve = await Promise.all(resultatsTrouves.map(epreuve => getEpreuve(+sessionId!, epreuve.code)));
+            const res_epreuve = await Promise.all(resultatsTrouves.map(async (epreuve) => {
+                const epreuveCache = getEpreuveByCode(epreuve.code);
+                if (epreuveCache) {
+                    return { status: 200, data: epreuveCache };
+                }
+
+                return getEpreuve(+sessionId!, epreuve.code);
+            }));
 
             if (res_epreuve.some(res => res.status !== 200 || !res.data)) {
                 setErreur("Erreur lors de la récupération des détails des épreuves");
                 return;
             } else if (res_epreuve.every(res => res.data)) {
-                setEpreuvesDetails(res_epreuve.map(res => res.data!));
+                const details = res_epreuve.map(res => res.data!);
+                details.forEach((epreuve) => upsertEpreuve(epreuve));
+                setEpreuvesDetails(details);
             }
 
 
@@ -96,7 +107,7 @@ export default function RecherchePage(): ReactElement {
             console.error(e);
             setErreur("Erreur serveur");
         }
-    }
+    }, [getEpreuveByCode, sessionId, type, upsertEpreuve, value1, value2]);
 
     useEffect(() => {
         if (sessionId === undefined || type === undefined || value1 === undefined) {
@@ -104,8 +115,8 @@ export default function RecherchePage(): ReactElement {
             return;
         }
 
-        fetchData();
-    }, [sessionId, type, value1, value2]);
+        void fetchData();
+    }, [fetchData, sessionId, type, value1]);
 
     console.log("Résultats de la recherche fetchData :", resultats);
 

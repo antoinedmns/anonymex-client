@@ -1,8 +1,8 @@
-import React, { useEffect } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Modal } from "../../../components/Modal";
 import { useModal } from "../../../contexts/ModalContext";
-import { type APIEpreuve } from "../../../contracts/epreuves";
+import { useEpreuvesCache } from "../../../contexts/EpreuvesCacheContext";
 
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
@@ -12,77 +12,110 @@ import MenuListeEtudiants from "./menu-modal/MenuListeEtudiants";
 import MenuGenererMatExam from "./menu-modal/MenuGenererMatExam";
 import { IncidentsComplets } from "./menu-modal/composantsIncidents/IncidentsComplets";
 
-import { useState } from "react";
 import { colors, Stack } from "@mui/material";
 
 import { themeEpreuves } from "../../../theme/epreuves";
 import { MenuScanCopies } from "./menu-modal/MenuScanCopies";
-import { BrowserRouter } from "react-router-dom";
 import MenuPresence from "./menu-modal/MenuPresence";
 
 
 export interface EpreuveModalProps {
-    epreuve: APIEpreuve;
+    codeEpreuve: string;
     sessionId: string;
     tab?: string | null;
-    nbIncidents?: number;
 }
 
-export function EpreuveModal({ epreuve, sessionId, tab, nbIncidents }: EpreuveModalProps) {
+export function EpreuveModal({ codeEpreuve, sessionId, tab }: EpreuveModalProps) {
     const { fermer } = useModal();
+    const { getEpreuveByCode, incrementEpreuveIncidents } = useEpreuvesCache();
+    const epreuveActive = getEpreuveByCode(codeEpreuve);
+    const [numeroOnglet, setNumeroOnglet] = useState(0);
+    const incidentsCount = epreuveActive?.incidents ?? 0;
 
-    const [numeroOnglet, setNumeroOnglet] = useState<0 | 1 | 2 | 3 | 4>(0);
-
-    const handleChange = (_event: React.SyntheticEvent, newValue: 0 | 1 | 2 | 3 | 4) => {
+    const handleChange = (_event: React.SyntheticEvent, newValue: number) => {
         setNumeroOnglet(newValue);
     };
 
-    const tabs = [
+    const appliquerDeltaIncidents = useCallback((delta: number) => {
+        incrementEpreuveIncidents(codeEpreuve, delta);
+    }, [codeEpreuve, incrementEpreuveIncidents]);
+
+    const handleIncidentCreated = useCallback(() => {
+        appliquerDeltaIncidents(1);
+    }, [appliquerDeltaIncidents]);
+
+    const handleIncidentResolved = useCallback(() => {
+        appliquerDeltaIncidents(-1);
+    }, [appliquerDeltaIncidents]);
+
+    const tabs = useMemo(() => {
+        if (!epreuveActive) return [];
+
+        return [
         {
             label: "Details",
-            content: <DetailsEpreuve epreuve={epreuve} />
+            content: <DetailsEpreuve epreuve={epreuveActive} />
         },
         {
             label: "Liste étudiants",
             content: (
                 <MenuListeEtudiants
-                    codeEpreuve={epreuve.code}
-                    idSession={epreuve.session}
-                    statut={epreuve.statut}
-                    menuColor={epreuve.statut == 1 ? undefined : themeEpreuves.status[epreuve.statut]}
+                    codeEpreuve={epreuveActive.code}
+                    idSession={epreuveActive.session}
+                    statut={epreuveActive.statut}
+                    menuColor={epreuveActive.statut == 1 ? undefined : themeEpreuves.status[epreuveActive.statut]}
                 />
             )
         },
 
-        ...(epreuve.statut <= 2 ? [{
+        ...(epreuveActive.statut <= 2 ? [{
             label: "Générer matériel d'examen",
-            content: <MenuGenererMatExam menuColor={themeEpreuves.status[epreuve.statut]} idSession={sessionId} codeEpreuve={epreuve.code} />
+            content: <MenuGenererMatExam menuColor={themeEpreuves.status[epreuveActive.statut]} idSession={sessionId} codeEpreuve={epreuveActive.code} />
         }] : []),
 
-        ...(epreuve.statut === 3 ? [{
+        ...(epreuveActive.statut === 3 ? [{
             label: "Scanner copies",
-            content: <MenuScanCopies codeUE={epreuve.code} idSession={sessionId} menuColor={themeEpreuves.status[epreuve.statut]} />
+            content: <MenuScanCopies codeUE={epreuveActive.code} idSession={sessionId} menuColor={themeEpreuves.status[epreuveActive.statut]} onIncidentCreated={handleIncidentCreated} onIncidentResolved={handleIncidentResolved} />
         }] : []),
 
-        ...(epreuve.statut >= 4 ? [{
+        ...(epreuveActive.statut >= 4 ? [{
             label: "Exporter les notes",
-            content: <MenuScanCopies codeUE={epreuve.code} idSession={sessionId} menuColor={themeEpreuves.status[epreuve.statut]} exportMode />
+            content: <MenuScanCopies codeUE={epreuveActive.code} idSession={sessionId} menuColor={themeEpreuves.status[epreuveActive.statut]} />
         }] : []),
 
         {
             label: "Présence",
-            content: <MenuPresence epreuve={epreuve} />
+            content: <MenuPresence epreuve={epreuveActive} />
         },
 
-        ...(epreuve.statut >= 3 && nbIncidents !== undefined && nbIncidents > 0 ? [{
-            label: `Incidents (${nbIncidents})`,
-            content: <IncidentsComplets idSession={Number(sessionId)} epreuveCode={epreuve.code} />
+        ...(epreuveActive.statut >= 3 && incidentsCount > 0 ? [{
+            label: `Incidents (${incidentsCount})`,
+            content: <IncidentsComplets idSession={Number(sessionId)} epreuveCode={epreuveActive.code} onIncidentCreated={handleIncidentCreated} onIncidentResolved={handleIncidentResolved} />
         }] : [])
-    ];
+        ];
+    }, [epreuveActive, handleIncidentCreated, handleIncidentResolved, incidentsCount, sessionId]);
+
+    useEffect(() => {
+        if (!tab) return;
+
+        const index = tabs.findIndex((item) => item.label.toLowerCase().includes(tab.toLowerCase()));
+        if (index >= 0) {
+            setNumeroOnglet(index);
+        }
+    }, [tab, tabs]);
+
+    useEffect(() => {
+        if (numeroOnglet > tabs.length - 1) {
+            setNumeroOnglet(Math.max(0, tabs.length - 1));
+        }
+    }, [numeroOnglet, tabs.length]);
+
+    if (!epreuveActive) {
+        return null;
+    }
 
     return (
-        <BrowserRouter>
-            <Modal titre={epreuve.code} onClose={() => { fermer(); }} width="1200px" height="650px" newbgcolor={themeEpreuves.status[epreuve.statut] + '4F'} idSession={sessionId}>
+            <Modal titre={epreuveActive.code} onClose={() => { fermer(); }} width="1200px" height="650px" newbgcolor={themeEpreuves.status[epreuveActive.statut] + '4F'} idSession={sessionId}>
                 <Stack>
                     <Stack >
                         <Tabs
@@ -92,11 +125,11 @@ export function EpreuveModal({ epreuve, sessionId, tab, nbIncidents }: EpreuveMo
                             textColor="primary"
                             sx={{
                                 width: '100%',
-                                bgcolor: themeEpreuves.status[epreuve.statut] + '4F',
+                                bgcolor: themeEpreuves.status[epreuveActive.statut] + '4F',
                                 '& .MuiTab-root': { color: colors.grey[800] },
                                 '& .MuiTab-root.Mui-selected': { color: colors.grey[900] },
-                                '& .MuiTab-root:hover': { backgroundColor: themeEpreuves.status[epreuve.statut] + '20' },
-                                '& .MuiTabs-indicator': { backgroundColor: themeEpreuves.status[epreuve.statut] + 'FF' }
+                                '& .MuiTab-root:hover': { backgroundColor: themeEpreuves.status[epreuveActive.statut] + '20' },
+                                '& .MuiTabs-indicator': { backgroundColor: themeEpreuves.status[epreuveActive.statut] + 'FF' }
                             }}
                         >
                             {tabs.map((tab, index) => (
@@ -109,7 +142,6 @@ export function EpreuveModal({ epreuve, sessionId, tab, nbIncidents }: EpreuveMo
                     </Stack>
                 </Stack>
             </Modal >
-        </BrowserRouter>
 
     );
 }

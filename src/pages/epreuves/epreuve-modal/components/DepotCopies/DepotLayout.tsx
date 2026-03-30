@@ -7,7 +7,7 @@ import BoutonStandard from "../BoutonStantard";
 import { useEffect, useRef, useState } from "react";
 import { FileList } from "./FileList";
 
-import { getIncidents, type APIIncident } from "../../../../../contracts/incidents";
+import { type APIIncident } from "../../../../../contracts/incidents";
 import { URL_API_BASE } from "../../../../../utils/api";
 import IncidentListe from "../../menu-modal/composantsIncidents/IncidentListe";
 import QueryBuilderIcon from '@mui/icons-material/QueryBuilder';
@@ -20,6 +20,8 @@ interface DepotLayoutProps {
     codeUE?: string; // Si ouvert depuis une UE, on peut préremplir le code UE, sinon il sera demandé à l'utilisateur
     setCodeScan?: (code: string) => void;
     setSuccess?: (success: boolean) => void;
+    onIncidentCreated?: () => void;
+    onIncidentResolved?: () => void;
 }
 
 export function DepotLayout(props: DepotLayoutProps) {
@@ -170,11 +172,24 @@ export function DepotLayout(props: DepotLayoutProps) {
     }
 
     const ajouterIncident = (incident: APIIncident) => {
-        setIncidents((prev) => [...prev, incident]);
+        setIncidents((prev) => {
+            if (prev.some((item) => item.idIncident === incident.idIncident)) {
+                return prev;
+            }
+
+            props.onIncidentCreated?.();
+            return [...prev, incident];
+        });
     }
 
     const retirerIncident = (idIncident: number) => {
-        setIncidents((prev) => prev.filter(incident => incident.idIncident !== idIncident));
+        setIncidents((prev) => {
+            const next = prev.filter(incident => incident.idIncident !== idIncident);
+            if (next.length < prev.length) {
+                props.onIncidentResolved?.();
+            }
+            return next;
+        });
     }
 
     // Appeler l'API pour écouter les événements de progression du dépôt via SSE
@@ -219,8 +234,14 @@ export function DepotLayout(props: DepotLayoutProps) {
             evtSource.addEventListener("incident", function (event) {
                 console.log('Erreur, INCIDENT détécté', event.data);
                 const info = JSON.parse(event.data)
-                setIncidents((prev) => [...prev, info]);
-                console.log(incidents);
+                setIncidents((prev) => {
+                    if (prev.some((item) => item.idIncident === info.idIncident)) {
+                        return prev;
+                    }
+
+                    props.onIncidentCreated?.();
+                    return [...prev, info];
+                });
             })
 
             // En cas d'erreur lors du traitement du dépôt, on affiche un message d'erreur et on ferme la connexion SSE
