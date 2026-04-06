@@ -1,9 +1,10 @@
 import { Alert, Box, Button, Divider, Snackbar, Stack, Tab, Tabs, TextField, Typography } from '@mui/material';
 import { type APIEpreuve } from '../../../../contracts/epreuves';
 import AnonymatCard from './composantsPresence/CodeSupplementaireCarte';
-import { getConvocationsSupplementaires, postConvocationPresents, type APIConvocationsSupplementairesMap } from '../../../../contracts/convocations';
+import { getConvocationsSupplementaires, patchConvocationSupplementaire as associerConvocationSupplementaire, postConvocationPresents, type APIConvocationsSupplementairesMap } from '../../../../contracts/convocations';
 import React from 'react';
 import { Check, Update } from '@mui/icons-material';
+import { useEpreuvesCache } from '../../../../contexts/EpreuvesCacheContext';
 
 type MenuPresenceProps = {
     epreuve: APIEpreuve;
@@ -11,104 +12,143 @@ type MenuPresenceProps = {
 }
 
 export default function MenuPresence({ epreuve, salleDefaultNumb }: MenuPresenceProps) {
+    const { patchEpreuve } = useEpreuvesCache();
 
-    // Liste des convocations supplémentaires, organisée par salle
-    const [listeConvoc, setListeConvoc] = React.useState<APIConvocationsSupplementairesMap>();
+    const [listeConvoc, setListeConvoc] = React.useState<APIConvocationsSupplementairesMap>({});
+    const [loadingSupplementaires, setLoadingSupplementaires] = React.useState(false);
 
-    // Valeur de l'input pour le nombre de présents, initialisée à la valeur actuelle de l'épreuve ou à 0 si non renseignée
-    const [inputNbPresents, setInputNbPresents] = React.useState<number>(epreuve.nbPresents || 0);
+    const [inputNbPresents, setInputNbPresents] = React.useState<string>(epreuve.nbPresents === undefined ? '' : String(epreuve.nbPresents));
+    const [nbPresents, setNbPresents] = React.useState<number | null>(epreuve.nbPresents ?? null);
+    const [isEditingPresence, setIsEditingPresence] = React.useState(epreuve.nbPresents === undefined);
 
-    // Gestion des erreurs pour le nombre de présents (négatif ou erreur API)
     const [nbPresentError, setNbPresentError] = React.useState<string | null>(null);
-
-    // Snackbar de succès ou d'erreur pour la confirmation du nombre de présents
     const [successMajPresents, setSuccessMajPresents] = React.useState<boolean | null>(null);
-
-    // UseState pour affichage du champ de saisie
-    const [showInput, setShowInput] = React.useState(epreuve.nbPresents === undefined);
-
-    // Gestion des erreurs pour chaque code d'anonymat supplémentaire (clé : codeAnonymat)
     const [anonymatErrors, setAnonymatErrors] = React.useState<string | null>(null);
 
-    function handleMajPresence() {
-        setShowInput(true);
-        epreuve.nbPresents = undefined;
-    }
+    const [salleTabs, setSalleTabs] = React.useState(() => {
+        const maxIndex = Math.max(0, epreuve.salles.length - 1);
+        return Math.min(Math.max(salleDefaultNumb || 0, 0), maxIndex);
+    });
 
-    async function handleConfirmPresence() {
+    const hasSalles = epreuve.salles.length > 0;
 
-        // On remet à zéro les erreurs à chaque confirmation
+    React.useEffect(() => {
+        const nextPresence = epreuve.nbPresents ?? null;
+
+        setNbPresents(nextPresence);
+        setInputNbPresents(nextPresence === null ? '' : String(nextPresence));
+        setIsEditingPresence(nextPresence === null);
         setNbPresentError(null);
         setSuccessMajPresents(null);
-        setShowInput(false);
+    }, [epreuve.session, epreuve.code, epreuve.nbPresents]);
 
+    React.useEffect(() => {
+        const maxIndex = Math.max(0, epreuve.salles.length - 1);
+        setSalleTabs((currentValue) => Math.min(Math.max(currentValue, 0), maxIndex));
+    }, [epreuve.salles.length]);
 
-        console.log("Nombre de présents à confirmer :", inputNbPresents);
+    React.useEffect(() => {
+        let active = true;
 
-        if (inputNbPresents < 0) {
-            setNbPresentError("Le nombre de présents doit être >= 0.");
+        async function fetchCodesAnonymatSupplementaires() {
+            setLoadingSupplementaires(true);
+
+            try {
+                const response = await getConvocationsSupplementaires(epreuve.session, epreuve.code);
+                if (!active) return;
+
+                if (response.status !== 200 || !response.data) {
+                    setListeConvoc({});
+                    setAnonymatErrors("Impossible de charger les codes d'anonymat supplémentaires.");
+                    return;
+                }
+
+                setListeConvoc(response.data);
+            }
+            catch {
+                if (active) {
+                    setListeConvoc({});
+                    setAnonymatErrors("Une erreur inattendue est survenue lors du chargement des codes d'anonymat supplémentaires.");
+                }
+            }
+            finally {
+                if (active) setLoadingSupplementaires(false);
+            }
+        }
+
+        void fetchCodesAnonymatSupplementaires();
+
+        return () => {
+            active = false;
+        };
+    }, [epreuve.session, epreuve.code]);
+
+    async function handleConfirmPresence() {
+        const nextValue = Number.parseInt(inputNbPresents, 10);
+
+        setNbPresentError(null);
+        setSuccessMajPresents(null);
+
+        if (Number.isNaN(nextValue) || nextValue < 0) {
+            setNbPresentError("Le nombre de présents doit être un entier supérieur ou égal à 0.");
+            return;
         }
 
         try {
-            const rep = await postConvocationPresents(epreuve.session, epreuve.code, inputNbPresents);
+            const rep = await postConvocationPresents(epreuve.session, epreuve.code, nextValue);
 
-            if (rep.status !== 200) {
-                setNbPresentError("Impossible de contacter le serveur.");
+            if (rep.status !== 200 || !rep.data || !rep.data.success) {
+                setNbPresentError("La mise à jour du nombre de présents a échoué.");
+                setSuccessMajPresents(false);
                 return;
             }
 
-            if (!rep.data) {
-                setNbPresentError("Réponse invalide du serveur.");
-                return;
-            }
-
-            if (!rep.data.success) {
-                setNbPresentError("La mise à jour a été refusée.");
-                return;
-            }
-
-            // Mise à jour réussie.
-            epreuve.nbPresents = inputNbPresents;
-            console.log("Nombre de présents mis à jour avec succès :", inputNbPresents);
+            setNbPresents(nextValue);
+            setInputNbPresents(String(nextValue));
+            setIsEditingPresence(false);
             setNbPresentError(null);
             setSuccessMajPresents(true);
+            patchEpreuve(epreuve.code, { nbPresents: nextValue });
         }
         catch (error) {
             console.error(error);
-            setNbPresentError("Une erreur inattendue est survenue.");
+            setNbPresentError("Une erreur inattendue est survenue lors de la mise à jour.");
+            setSuccessMajPresents(false);
         }
     }
 
-    async function fetchCodesAnonymatSupplementaires() {
-        const response = await getConvocationsSupplementaires(epreuve.session, epreuve.code);
-
-        if (response.status !== 200 || !response.data) {
-            console.error("Erreur lors de la récupération des codes d'anonymat supplémentaires :", response.status);
-            return;
-        } else {
-            setListeConvoc(response.data ?? {});
-            console.log("Codes d'anonymat supplémentaires récupérés :", (response.data));
-        }
-    }
-
-    React.useEffect(() => {
-        fetchCodesAnonymatSupplementaires();
-    }, [epreuve.session, epreuve.code]);
-
-    // Tabs
-
-    // UseState pour la valeur de chaque salle de l'épreuve
-    const [salleTabs, setsalleTabs] = React.useState(salleDefaultNumb || 0);
-
-    // Fonction pour gérer le changement de tab
     const handleChangeSalle = (_: React.SyntheticEvent, newValue: number) => {
-        setsalleTabs(newValue);
+        setSalleTabs(newValue);
     };
 
+    async function handleAssociateSupplementaire(codeAnonymat: string, numeroEtudiant: number) {
+        const response = await associerConvocationSupplementaire(epreuve.session, epreuve.code, codeAnonymat, { numeroEtudiant });
 
-    const currentSalle = epreuve.salles[salleTabs];
-    const convocations = listeConvoc?.[currentSalle] ?? [];
+        if (response.status !== 200 || response.error || !response.data) {
+            const message = response.error ?? "Impossible d'associer ce code d'anonymat.";
+            setAnonymatErrors(message);
+            throw new Error(message);
+        }
 
+        if (!response.data.success) {
+            const message = "L'association a été refusée par le serveur.";
+            setAnonymatErrors(message);
+            throw new Error(message);
+        }
+
+        // On retire localement la convocation désormais associée.
+        setListeConvoc((prev) => {
+            const next: APIConvocationsSupplementairesMap = {};
+
+            for (const [salle, convocations] of Object.entries(prev)) {
+                next[salle] = convocations.filter((convoc) => convoc.codeAnonymat !== codeAnonymat);
+            }
+
+            return next;
+        });
+
+        setAnonymatErrors(null);
+    }
 
     return (
         <>
@@ -116,25 +156,24 @@ export default function MenuPresence({ epreuve, salleDefaultNumb }: MenuPresence
                 {/* Partie gauche du menu de présence (Input et confirmation ) */}
                 <Stack direction="column" spacing={2} alignItems="stretch" width={'32%'}>
                     <Box>
-                        <Typography variant="h5" fontWeight={'bold'}>
+                        <Typography variant="h5" fontWeight={'bold'} mb={1}>
                             Présents
                         </Typography>
-                        <Typography variant="body1" color="textSecondary" mb={1} alignSelf={'center'}>
+                        <Typography variant="body1" color="text.secondary" mb={1}>
                             Renseignez le nombre d'étudiants présents lors de l'épreuve :
                         </Typography>
                     </Box>
 
-                    {!showInput ? (
-                        // Affichage du nombre de présents actuel si déjà renseigné
-                        <Typography variant="h6" fontWeight={'bold'} alignSelf={'center'}>
-                            {epreuve.nbPresents ? `${epreuve.nbPresents}` : " Non renseigné"}
+                    {!isEditingPresence ? (
+                        <Typography variant="h6" fontWeight={'bold'}>
+                            {nbPresents === null ? 'Non renseigné' : nbPresents}
                         </Typography>
-                    ) :
-                        // Sinon affichage du champ de saisie
+                    ) : (
                         <TextField
                             label="Nombre de présents"
                             type="number"
-                            onChange={(e) => setInputNbPresents(Number(e.target.value))}
+                            value={inputNbPresents}
+                            onChange={(e) => setInputNbPresents(e.target.value)}
                             slotProps={{
                                 htmlInput: {
                                     min: 0
@@ -143,15 +182,23 @@ export default function MenuPresence({ epreuve, salleDefaultNumb }: MenuPresence
                             helperText={nbPresentError}
                             error={!!nbPresentError}
                         />
-                    }
-                    {epreuve.nbPresents === undefined && (
-                        <Button variant="contained" color="primary" onClick={handleConfirmPresence} startIcon={<Check />}>
-                            Confirmer
-                        </Button>
                     )}
 
-                    {epreuve.nbPresents !== undefined && (
-                        <Button variant="outlined" color="secondary" onClick={handleMajPresence} startIcon={<Update />}>
+                    {isEditingPresence ? (
+                        <Button variant="contained" color="primary" onClick={handleConfirmPresence} startIcon={<Check />}>
+                            {nbPresents === null ? 'Confirmer' : 'Valider la mise à jour'}
+                        </Button>
+                    ) : (
+                        <Button
+                            variant="outlined"
+                            color="secondary"
+                            onClick={() => {
+                                setInputNbPresents(nbPresents === null ? '' : String(nbPresents));
+                                setIsEditingPresence(true);
+                                setNbPresentError(null);
+                            }}
+                            startIcon={<Update />}
+                        >
                             Mettre à jour
                         </Button>
                     )}
@@ -159,12 +206,12 @@ export default function MenuPresence({ epreuve, salleDefaultNumb }: MenuPresence
 
                 <Divider orientation="vertical" flexItem />
 
-                <Stack direction="row" spacing={4} alignItems="stretch" width={'100%'}>
-                    <Stack direction="column" spacing={4} width={'20%'}>
+                <Stack direction="row" spacing={4} alignItems="stretch" width="100%">
+                    <Stack direction="column" spacing={4} width="20%">
                         <Tabs
-                            orientation='vertical'
-                            variant='scrollable'
-                            value={salleTabs}
+                            orientation="vertical"
+                            variant="scrollable"
+                            value={hasSalles ? salleTabs : false}
                             onChange={handleChangeSalle}
                             sx={{
                                 borderRight: 1,
@@ -176,67 +223,99 @@ export default function MenuPresence({ epreuve, salleDefaultNumb }: MenuPresence
                                 <Tab
                                     key={salle}
                                     label={salle}
+                                    value={index}
+                                    id={`vertical-tab-${index}`}
+                                    aria-controls={`vertical-tabpanel-${index}`}
                                 />
                             ))}
-
                         </Tabs>
                     </Stack>
 
-                    {epreuve.salles.map((salle, index) => (
-                        <Box key={salle}
-                            role="tabpanel"
-                            id={`vertical-tabpanel-${index}`}
-                            aria-labelledby={`vertical-tab-${index}`}
-                            sx={{
-                                width: '100%',
-                                flexDirection: 'row',
-                                justifyContent: 'space-between',
-                                display: salleTabs === index ? 'flex' : 'none',
+                    <Box sx={{ width: '100%', minWidth: 0 }}>
+                        <Typography variant="h5" fontWeight="bold">
+                            Codes d'anonymat supplémentaires
+                        </Typography>
+                        <Typography variant="body1" color="text.secondary" mb={3}>
+                            Associer chaque code d'anonymat supplémentaire attribué à un étudiant.
+                        </Typography>
 
-                            }}
-                        >
+                        {!hasSalles ? (
+                            <Alert severity="info" sx={{ width: '100%' }}>
+                                Aucune salle n'est disponible pour cette épreuve.
+                            </Alert>
+                        ) : loadingSupplementaires ? (
+                            <Alert severity="info" sx={{ width: '100%' }}>
+                                Chargement des codes d'anonymat supplémentaires...
+                            </Alert>
+                        ) : (
+                            epreuve.salles.map((salle, index) => {
+                                const convocations = listeConvoc[salle] ?? [];
 
-                            {/* Partie droite du menu de présence (Codes d'anonymat supplémentaires) */}
-                            <Box width={"100%"}>
-                                <Typography variant="h5" fontWeight={'bold'}>
-                                    Codes d'anonymat supplémentaires
-                                </Typography>
-                                <Typography variant="body1" color="textSecondary" mb={3}>
-                                    Associer chaque code d'anonymat supplémentaire attribué à un étudiant :
-                                </Typography>
-
-                                {/* TODO : Afficher la liste des codes d'anonymat supplémentaires avec un champ de saisie pour associer un étudiant (peut-être un select/autocomplete avec les étudiants de la session ou inscrits à l'epreuve ?) */}
-                                <Stack direction="column" spacing={1} alignItems="flex-start" width={"100%"} overflow={'y-scroll'} maxHeight={400} paddingRight={1}>
-
-                                    {convocations.length > 0 ? convocations.map((convoc) => (
-                                        <AnonymatCard key={convoc.codeAnonymat + convoc.idSession} codeAnonymat={convoc.codeAnonymat} OnError={setAnonymatErrors} />
-                                    )) : (
-                                        <Alert severity="info" sx={{ width: '100%' }}>
-                                            Aucun code d'anonymat supplémentaire pour la salle {salle}.
-                                        </Alert>
-                                    )}
-                                </Stack>
-                            </Box>
-                        </Box>
-                    ))}
+                                return (
+                                    <Box
+                                        key={salle}
+                                        role="tabpanel"
+                                        id={`vertical-tabpanel-${index}`}
+                                        aria-labelledby={`vertical-tab-${index}`}
+                                        sx={{
+                                            display: salleTabs === index ? 'block' : 'none',
+                                            width: '100%',
+                                        }}
+                                    >
+                                        {convocations.length > 0 ? (
+                                            <Stack
+                                                direction="column"
+                                                spacing={1.5}
+                                                alignItems="stretch"
+                                                width="100%"
+                                                sx={{
+                                                    maxHeight: 400,
+                                                    minHeight: 0,
+                                                    overflowY: 'auto',
+                                                    overflowX: 'hidden',
+                                                }}
+                                                pr={1}
+                                            >
+                                                {convocations.map((convoc) => (
+                                                    <AnonymatCard
+                                                        key={`${convoc.codeAnonymat}-${convoc.idSession}`}
+                                                        codeAnonymat={convoc.codeAnonymat}
+                                                        numeroEtudiant={convoc.numeroEtudiant}
+                                                        onAssociate={(numeroEtudiant) => handleAssociateSupplementaire(convoc.codeAnonymat, numeroEtudiant)}
+                                                    />
+                                                ))}
+                                            </Stack>
+                                        ) : (
+                                            <Alert severity="info" sx={{ width: '100%' }}>
+                                                Aucun code d'anonymat supplémentaire pour la salle {salle}.
+                                            </Alert>
+                                        )}
+                                    </Box>
+                                );
+                            })
+                        )}
+                    </Box>
                 </Stack>
             </Stack>
 
             {successMajPresents !== null && (
-                <Snackbar open={true} autoHideDuration={6000} onClose={() => setSuccessMajPresents(null)}>
+                <Snackbar open autoHideDuration={6000} onClose={() => setSuccessMajPresents(null)}>
                     <Alert severity={successMajPresents ? "success" : "error"} sx={{ width: '100%' }}>
                         {successMajPresents ? "Nombre de présents mis à jour avec succès !" : "Erreur lors de la mise à jour du nombre de présents."}
                     </Alert>
                 </Snackbar>
-            )}
+            )
+            }
 
-            {anonymatErrors && (
-                <Snackbar open={true} autoHideDuration={6000} onClose={() => setAnonymatErrors(null)}>
-                    <Alert severity="error" sx={{ width: '100%' }}>
-                        {anonymatErrors}
-                    </Alert>
-                </Snackbar>
-            )}
+            {
+                anonymatErrors && (
+                    <Snackbar open autoHideDuration={6000} onClose={() => setAnonymatErrors(null)}>
+                        <Alert severity="error" sx={{ width: '100%' }}>
+                            {anonymatErrors}
+                        </Alert>
+                    </Snackbar>
+                )
+            }
         </>
     );
 }

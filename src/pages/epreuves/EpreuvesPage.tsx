@@ -4,10 +4,10 @@ import { type APIEpreuve } from "../../contracts/epreuves";
 import { Box, Divider, Snackbar, Stack, Typography, Alert, Button } from "@mui/material";
 import { useSnackbarGlobal } from "../../contexts/SnackbarContext";
 import { EpreuveCard } from "./EpreuveCard";
-import { formatterDateEntiere } from "../../utils/dateUtils";
+import { formatterDate } from "../../utils/dateUtils";
 import SearchBar from "../../components/SearchBar";
 import EpreuvesFiltreCard from "./EpreuvesFiltreCard";
-import { blue, grey, lightGreen, purple, teal } from "@mui/material/colors";
+import { blue, green, grey, lightGreen, teal } from "@mui/material/colors";
 import { themeEpreuves } from "../../theme/epreuves";
 import { Download, Folder } from "@mui/icons-material";
 import { useModal } from "../../contexts/ModalContext";
@@ -17,6 +17,7 @@ import { BordereauxModal } from "./epreuve-modal/BordereauxModal";
 import DocumentScannerIcon from '@mui/icons-material/DocumentScanner';
 import { ScanModal } from "./epreuve-modal/ScanModal"
 import { useEpreuvesCache } from "../../contexts/EpreuvesCacheContext";
+import SessionParentEtape from "../accueil/sessions/session-modal/creer-session/SessionParentEtape";
 
 export type SortOption = "chronologique" | "inverse-chronologique";
 
@@ -59,9 +60,7 @@ export default function EpreuvesPage(): ReactElement {
 
 
     useEffect(() => {
-        if (erreurChargement) {
-            afficherErreur("Impossible de charger les épreuves : " + erreurChargement);
-        }
+        if (erreurChargement) afficherErreur("Impossible de charger les épreuves : " + erreurChargement);
     }, [afficherErreur, erreurChargement]);
 
 
@@ -128,6 +127,15 @@ export default function EpreuvesPage(): ReactElement {
 
     if (!sessionId) return <Typography variant="h5" color="error">ID de session manquant dans l'URL.</Typography>;
 
+    const aucuneEpreuveRetournee = !estChargement
+        && !erreurChargement
+        && listeEpreuves.epreuvesAvenir.length === 0
+        && listeEpreuves.epreuvesPassees.length === 0;
+
+    if (aucuneEpreuveRetournee) {
+        return <SessionParentEtape onClose={() => undefined} importSessionId={+sessionId} />;
+    }
+
     return (
         <Box p={3}>
             <SearchBar onResultClick={handleEpreuveClick} sessionId={+sessionId} />
@@ -145,7 +153,7 @@ export default function EpreuvesPage(): ReactElement {
                             <Stack spacing={2}>
                                 {epreuvesAffichees.map((epreuve) => (
                                     typeof epreuve === "number" ? (
-                                        <Typography key={epreuve} variant="h5" paddingTop={3} fontWeight={700}>{formatterDateEntiere(epreuve)}</Typography>
+                                        <Typography key={epreuve} variant="h5" paddingTop={3} fontWeight={700}>{formatterDate(epreuve)}</Typography>
                                     ) : (
                                         <EpreuveCard key={epreuve.code + epreuve.date} epreuve={epreuve} onClick={handleEpreuveClick} />
                                     )
@@ -156,15 +164,15 @@ export default function EpreuvesPage(): ReactElement {
                     <Box sx={{ width: '35%' }}>
                         { /* FILTRES ET OPTIONS DE TRI */}
                         <Stack spacing={2}>
-                            <Typography variant="h5" paddingTop={3} fontWeight={700}>Filtres</Typography>
-                            <EpreuvesFiltreCard couleur={purple[300]} titre="Épreuves à venir" nombre={listeEpreuves.epreuvesAvenir.length} selectionne={typeEpreuve === 'aVenir'} onClick={() => handleTypeEpreuveChange('aVenir')} />
+                            <Typography variant="h5" paddingTop={3} fontWeight={700}>Afficher</Typography>
+                            <EpreuvesFiltreCard couleur={green[300]} titre="Épreuves à venir" nombre={listeEpreuves.epreuvesAvenir.length} selectionne={typeEpreuve === 'aVenir'} onClick={() => handleTypeEpreuveChange('aVenir')} />
                             <EpreuvesFiltreCard couleur={blue[300]} titre="Épreuves passées" nombre={listeEpreuves.epreuvesPassees.length} selectionne={typeEpreuve === 'passees'} onClick={() => handleTypeEpreuveChange('passees')} />
                         </Stack>
 
                         <Stack spacing={2}>
-                            <Typography variant="h5" paddingTop={5} fontWeight={700}>Statuts</Typography>
-                            <EpreuvesFiltreCard couleur={themeEpreuves.status[0]} titre="Tout afficher" sousTexte="Afficher tous les statuts." icone={<Folder sx={{ color: grey[700] }} fontSize="large" />} selectionne={filtreStatut === null} onClick={() => handleStatutChange(null)} />
-                            {statutMap.get(1) && <EpreuvesFiltreCard couleur={themeEpreuves.status[1]} titre="Matériel non imprimé" sousTexte="Examens pour lesquels le matériel n’a pas été imprimé." nombre={statutMap.get(1)} selectionne={filtreStatut === 1} onClick={() => handleStatutChange(1)} />}
+                            <Typography variant="h5" paddingTop={5} fontWeight={700}>Filtrer</Typography>
+                            <EpreuvesFiltreCard couleur={grey[400]} titre="Tout afficher" sousTexte="Aucun filtre, toutes les épreuves." icone={<Folder sx={{ color: grey[700] }} fontSize="large" />} selectionne={filtreStatut === null} onClick={() => handleStatutChange(null)} />
+                            {statutMap.get(1) && <EpreuvesFiltreCard couleur={themeEpreuves.status[1]} titre="Matériel non imprimé" sousTexte="Examens pour lesquels le matériel n'a pas été imprimé." nombre={statutMap.get(1)} selectionne={filtreStatut === 1} onClick={() => handleStatutChange(1)} />}
                             {statutMap.get(2) && <EpreuvesFiltreCard couleur={themeEpreuves.status[2]} titre="Materiel imprimé" sousTexte="Examens pour lesquels le matériel a été imprimé." nombre={statutMap.get(2)} selectionne={filtreStatut === 2} onClick={() => handleStatutChange(2)} />}
                             {statutMap.get(3) && <EpreuvesFiltreCard couleur={themeEpreuves.status[3]} titre="En attente de dépot" sousTexte="Examens en attente de dépôt des copies." nombre={statutMap.get(3)} selectionne={filtreStatut === 3} onClick={() => handleStatutChange(3)} />}
                             {statutMap.get(4) && <EpreuvesFiltreCard couleur={themeEpreuves.status[4]} titre="Dépot complet" sousTexte="Examens pour lesquels toutes les copies ont été déposées." nombre={statutMap.get(4)} selectionne={filtreStatut === 4} onClick={() => handleStatutChange(4)} />}

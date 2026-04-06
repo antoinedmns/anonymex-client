@@ -49,7 +49,7 @@ export const patchConvocation = (sessionId: number, epreuveCode: string, codeAno
 }
 
 export const patchConvocationSupplementaire = (sessionId: number, epreuveCode: string, codeAnonymat: string, data: { numeroEtudiant: number }) => {
-    return apiRequest<{ numeroEtudiant: number }, APIBoolResponse>('PATCH', `/sessions/${sessionId}/epreuves/${epreuveCode}/convocations/supplementaires/${codeAnonymat}`, data);
+    return apiRequest<{ numeroEtudiant: number }, APIBoolResponse>('POST', `/sessions/${sessionId}/epreuves/${epreuveCode}/convocations/supplementaires/${codeAnonymat}`, data);
 }
 
 export const postConvocationPresents = (sessionId: number, epreuveCode: string, nbPresents: number) => {

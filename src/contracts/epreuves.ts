@@ -2,12 +2,13 @@ import z from "zod";
 import { apiRequest } from "../utils/api";
 import type { APIBoolResponse } from "./common";
 
-export type EpreuveStatut = 1 | 2 | 3 | 4 | 5;
+export type EpreuveStatut = 1 | 2 | 3 | 4 | 5 | 6;
 
 export const EpreuveStatutNom: Record<EpreuveStatut, string> = {
     1: "Matériel non imprimé",
     2: "Matériel imprimé",
-    3: "En attente de dépôt",
+    6: "Présences non saisies",
+    3: "Présences saisies",
     4: "Dépôt complet",
     5: "Notes exportées"
 };
@@ -17,7 +18,7 @@ export const EpreuveSchema = z.object({
     session: z.number().int().positive(),
     code: z.string(),
     nom: z.string(),
-    statut: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5)]),
+    statut: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5), z.literal(6)]),
     salles: z.array(z.string()),
     date: z.number().int().positive(), // timestamp depuis epoch en millisecondes
     duree: z.number().int().positive(), // durée en minutes

@@ -36,8 +36,9 @@ export default function InscriptionValiderEmail({ jeton, onValidate }: { jeton: 
     return (
         <AuthFormulaire onSubmit={handleSubmit}>
             <AuthFormCorps
-                title="Inscription"
-                description="Saisissez l'adresse e-mail indiquée par l'administrateur lors de la création de votre lien d'invitation. Elle doit correspondre exactement."
+                title={jeton === "setup" ? "Bienvenue" : "Inscription"}
+                description={jeton === "setup" ? "Saisissez l'adresse e-mail du compte administrateur que vous souhaitez créer."
+                    : "Saisissez l'adresse e-mail indiquée par l'administrateur lors de la création de votre lien d'invitation. Elle doit correspondre exactement."}
             >
                 <Stack spacing={2} direction={"row"}>
                     <AuthChampEmail value={email} onChange={handleSetEmail} error={!emailValide ? "Adresse e-mail invalide." : null} />

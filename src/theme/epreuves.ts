@@ -5,12 +5,9 @@ export const themeEpreuves = {
         0: deepPurple[200],
         1: grey[500],
         2: green[500],
-        3: blue[300], 
+        3: blue[300],
         4: indigo[500],
-        5: purple[300], 
-    },
-    examens: {
-        futurs: cyan[200],
-        passes: deepPurple[200],
-    },
+        5: purple[300],
+        6: cyan[300],
+    }
 }

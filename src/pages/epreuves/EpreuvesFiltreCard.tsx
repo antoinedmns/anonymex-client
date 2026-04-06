@@ -13,11 +13,11 @@ interface EpreuvesFiltresProps {
 
 export default function EpreuvesFiltreCard({ titre, sousTexte, nombre, icone, selectionne: selected, couleur, onClick }: EpreuvesFiltresProps): JSX.Element {
     return (
-        <Card variant={"outlined"} sx={{borderColor: selected ? couleur : 'grey.300', bgcolor: selected ? couleur + '1A' : 'background.paper'}}>
+        <Card variant={"outlined"} sx={{ borderColor: selected ? couleur : 'grey.300', bgcolor: selected ? couleur + '1A' : 'background.paper' }}>
             <CardActionArea onClick={onClick}>
                 <Stack direction="row" alignItems="center" spacing={0.7}>
 
-                    <Stack alignItems={'center'} justifyContent='center' alignSelf={'stretch'} 
+                    <Stack alignItems={'center'} justifyContent='center' alignSelf={'stretch'}
                         sx={{
                             minWidth: '5rem',
                             fontSize: '1.1rem',
@@ -25,7 +25,7 @@ export default function EpreuvesFiltreCard({ titre, sousTexte, nombre, icone, se
                         }}
                     >
                         {icone && icone}
-                        {nombre !== undefined && <Typography variant="h5" fontWeight={500} color="grey.800">{nombre}</Typography>}
+                        {nombre !== undefined && <Typography variant="h5" fontWeight={500} color="grey.850">{nombre}</Typography>}
                     </Stack>
 
                     <Stack padding={sousTexte ? 1.5 : 2.5} spacing={0}>
