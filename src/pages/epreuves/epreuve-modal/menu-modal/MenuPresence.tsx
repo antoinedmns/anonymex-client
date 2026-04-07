@@ -14,13 +14,22 @@ type MenuPresenceProps = {
 export default function MenuPresence({ epreuve, salleDefaultNumb }: MenuPresenceProps) {
     const { patchEpreuve } = useEpreuvesCache();
 
+    // Initialisation des convocations supplémentaires pour l'épreuve
     const [listeConvoc, setListeConvoc] = React.useState<APIConvocationsSupplementairesMap>({});
+
+    // État de chargement pour les convocations supplémentaires
     const [loadingSupplementaires, setLoadingSupplementaires] = React.useState(false);
 
+    // Valeur de l'input pour le nombre de présents pour l'épreuve
     const [inputNbPresents, setInputNbPresents] = React.useState<string>(epreuve.nbPresents === undefined ? '' : String(epreuve.nbPresents));
+
+    // Nombre de présents actuellement enregistré pour l'épreuve (null si non renseigné)
     const [nbPresents, setNbPresents] = React.useState<number | null>(epreuve.nbPresents ?? null);
+
+    // Indique si l'utilisateur est en train de modifier le nombre de présents (true si l'input est affiché, false si on affiche simplement le nombre)
     const [isEditingPresence, setIsEditingPresence] = React.useState(epreuve.nbPresents === undefined);
 
+    // Gestion des erreurs et succès pour la mise à jour du nombre de présents et l'association des codes d'anonymat
     const [nbPresentError, setNbPresentError] = React.useState<string | null>(null);
     const [successMajPresents, setSuccessMajPresents] = React.useState<boolean | null>(null);
     const [anonymatErrors, setAnonymatErrors] = React.useState<string | null>(null);

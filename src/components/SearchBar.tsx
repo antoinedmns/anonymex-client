@@ -1,5 +1,5 @@
 import { useState, type ReactElement } from 'react';
-import { TextField, Stack, Button, Tooltip, Autocomplete, Divider, IconButton, Box } from '@mui/material';
+import { TextField, Stack, Button, Tooltip, Autocomplete, Divider, IconButton, Box, Snackbar, Alert } from '@mui/material';
 
 import LeftArrow from '@mui/icons-material/ArrowBackIosNew';
 
@@ -8,6 +8,8 @@ import { getRecherche } from '../contracts/recherche';
 import { FormatListBulleted, StickyNote2, MeetingRoom, AccessTime, Person, Construction, Search } from '@mui/icons-material';
 import { getEpreuve, type APIEpreuve } from '../contracts/epreuves';
 import { formatterDateEntiere } from '../utils/dateUtils';
+import { BordereauxModal } from '../pages/epreuves/epreuve-modal/BordereauxModal';
+import { ScanModal } from '../pages/epreuves/epreuve-modal/ScanModal';
 
 interface SearchBarProps {
     onResultClick?: (epreuve: APIEpreuve) => void;
@@ -46,6 +48,17 @@ function formatResultat(option: RechercheResultat): string {
         case 3:
             return `Salle : ${option.codeSalle}, le ${formatterDateEntiere(+option.horodatage)}`;
         case 4:
+            if (option.action === 1) {
+                return "Télécharger le bordereau";
+            }
+
+            if (option.action === 2) {
+                return "Déposer des copies";
+            }
+
+            if (option.action === 3) {
+                return "Changer de session (non implémenté)";
+            }
             return `Action : ${option.action}`;
         case 5:
             return `Étudiant : ${option.numero}`;
@@ -56,14 +69,25 @@ function formatResultat(option: RechercheResultat): string {
 
 function SearchBar(props: SearchBarProps) {
 
+    // Afficher snackbar de succès après le scan
+    const [openSnackbar, setOpenSnackbar] = useState<boolean>(false)
+    const [codeScan, setCodeScan] = useState<string>("");
+
     // Liste des résultats de recherche (change a chaque action de recherche)
     const [resultats, setResultats] = useState<RechercheResultat[] | null>(null);
+
+    // Modal bordereau
+    const [bordereauModalOpen, setBordereauModalOpen] = useState(false);
+
+    // Modal Depot de copies
+    const [depotCopiesModalOpen, setDepotCopiesModalOpen] = useState(false);
 
     // Valeur de l'input de recherche
     const [inputValue, setInputValue] = useState("");
 
     // Gère le clic sur un résultat de recherche (Epreuve: fonctionnel, autres types: à implémenter)
     async function handleClickResultat(option: RechercheResultat) {
+
         switch (option.type) {
             // Epreuve
             case 0:
@@ -95,8 +119,25 @@ function SearchBar(props: SearchBarProps) {
             // Action
             case 4:
                 if (option.action === 1) {
+                    // Télécharger le bordereau
+                    setBordereauModalOpen(true);
                 }
-            // Todo : implémenter la page de résultats de recherche pour les actions
+
+                if (option.action === 2) {
+                    // Déposer des copies
+                    setDepotCopiesModalOpen(true);
+                }
+
+                if (option.action === 3) {
+                    // Changer de session (non implémenté)
+                    // navigate(`/sessions/${props.sessionId}/epreuves`);
+                }
+                break;
+
+            // Étudiant
+            case 5:
+                navigate(`/sessions/${props.sessionId}/recherche/etudiant/${option.numero}`);
+                break;
         }
     }
 
@@ -123,151 +164,174 @@ function SearchBar(props: SearchBarProps) {
     }
 
     return (
-        <Stack spacing={2} alignItems="center" justifyContent={"center"} direction={"row"} width={'100%'}>
+        <>
+            <Stack spacing={2} alignItems="center" justifyContent={"center"} direction={"row"} width={'100%'}>
 
 
-            {/* Bouton pour revenir à la liste des sessions */}
-            {/* Todo : remplacer par le nom de la session courante cf. EpreuvesPage.tsx */}
-            <Tooltip title="Changer de session">
-                <Button startIcon={<LeftArrow />}
-                    onClick={props.handleBack ? props.handleBack : handleBackToAccueil}
-                    variant="text"
-                    sx={{ alignSelf: 'stretch' }}
-                >{props.nomHandleBack ? props.nomHandleBack : "Retour à l'accueil"}</Button>
-            </Tooltip>
+                {/* Bouton pour revenir à la liste des sessions */}
+                <Tooltip title="Changer de session">
+                    <Button startIcon={<LeftArrow />}
+                        onClick={props.handleBack ? props.handleBack : handleBackToAccueil}
+                        variant="text"
+                        sx={{ alignSelf: 'stretch' }}
+                    >{props.nomHandleBack ? props.nomHandleBack : "Retour à l'accueil"}</Button>
+                </Tooltip>
 
-            <Autocomplete
-                freeSolo
-                id="search-input"
+                <Autocomplete
+                    freeSolo
+                    id="search-input"
 
-                disableClearable
-                inputValue={inputValue}
+                    disableClearable
+                    inputValue={inputValue}
 
-                options={resultats ?? []}
-                filterOptions={(options) => options}
+                    options={resultats ?? []}
+                    filterOptions={(options) => options}
 
-                // A fix: n'affiche pas "Aucun résultat" quand le résultat de la recherche est vide.
-                noOptionsText="Aucun résultat"
+                    // A fix: n'affiche pas "Aucun résultat" quand le résultat de la recherche est vide.
+                    noOptionsText="Aucun résultat"
 
-                // Style du conteneur !
-                sx={{ width: 600, maxWidth: '100%' }}
+                    // Style du conteneur !
+                    sx={{ width: 600, maxWidth: '100%' }}
 
-                getOptionLabel={(option) => typeof option === 'string' ? option : formatResultat(option)}
+                    getOptionLabel={() => ""}
 
-                renderOption={(props, option) => {
-                    const { key, ...optionProps } = props;
+                    renderOption={(props, option) => {
+                        const { key, ...optionProps } = props;
 
-                    return (
-                        // Disposition en ligne avec une icône à gauche et le texte à droite (et possiblement un texte supplémentaire)
-                        <Box
-                            key={key}
-                            component="li"
-                            {...optionProps}
-                            sx={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                mx: 1,
-                                my: 0.5,
-                                gap: 3,
-                                px: 2,
-                                py: 1.2,
-                                borderRadius: 2,
-                                cursor: 'pointer',
-                                transition: 'all 0.2s ease',
-
-                                '&:hover': {
-                                    backgroundColor: 'rgba(0,0,0,0.05)',
-                                    transform: 'translateX(4px)',
-                                },
-                            }}
-                        >
-                            {/* Icône */}
+                        return (
+                            // Disposition en ligne avec une icône à gauche et le texte à droite (et possiblement un texte supplémentaire)
                             <Box
+                                key={key}
+                                component="li"
+                                {...optionProps}
                                 sx={{
                                     display: 'flex',
                                     alignItems: 'center',
-                                    justifyContent: 'center',
-                                    width: 36,
-                                    height: 36,
-                                    borderRadius: '50%',
-                                    backgroundColor: 'rgba(0,0,0,0.08)',
+                                    mx: 1,
+                                    my: 0.5,
+                                    gap: 3,
+                                    px: 2,
+                                    py: 1.2,
+                                    borderRadius: 2,
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s ease',
+
+                                    '&:hover': {
+                                        backgroundColor: 'rgba(0,0,0,0.05)',
+                                        transform: 'translateX(4px)',
+                                    },
                                 }}
                             >
-                                {rechercheResultatIcones[option.type]}
-                            </Box>
-
-                            {/* Texte */}
-                            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-                                <Box sx={{ fontWeight: 500 }}>
-                                    {formatResultat(option)}
+                                {/* Icône */}
+                                <Box
+                                    sx={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        width: 36,
+                                        height: 36,
+                                        borderRadius: '50%',
+                                        backgroundColor: 'rgba(0,0,0,0.08)',
+                                    }}
+                                >
+                                    {rechercheResultatIcones[option.type]}
                                 </Box>
 
-                                {/* Sous-texte optionnel */}
-                                {/* {option.type && (
-                                <Box sx={{ fontSize: 12, color: 'text.secondary' }}>
-                                {option.type}
+                                {/* Texte */}
+                                <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                                    <Box sx={{ fontWeight: 500 }}>
+                                        {formatResultat(option)}
+                                    </Box>
+
+                                    {/* Sous-texte optionnel */}
+                                    {/* {option.type && (
+                                    <Box sx={{ fontSize: 12, color: 'text.secondary' }}>
+                                    {option.type}
+                                    </Box>
+                                )} */}
                                 </Box>
-                            )} */}
                             </Box>
-                        </Box>
-                    );
-                }}
-                onInputChange={(_, newInputValue) => {
-                    setInputValue(newInputValue);
+                        );
+                    }}
+                    onInputChange={(_, newInputValue) => {
+                        setInputValue(newInputValue);
 
-                    if (newInputValue.trim() === "" || newInputValue.trim().length < 3) {
+                        if (newInputValue.trim() === "" || newInputValue.trim().length < 3) {
 
-                        setResultats(null);
-                        return;
+                            setResultats(null);
+                            return;
 
-                    } else {
-                        console.log("Nouveau terme de recherche :", newInputValue);
-                        fetchResults(newInputValue);
+                        } else {
+                            console.log("Nouveau terme de recherche :", newInputValue);
+                            fetchResults(newInputValue);
 
-                    }
-                }}
+                        }
+                    }}
 
-                onChange={(_, value) => {
-                    if (value && typeof value !== 'string') {
-                        handleClickResultat(value);
+                    onChange={(_, value) => {
+                        if (value && typeof value !== 'string') {
+                            handleClickResultat(value);
 
-                        setInputValue("");
-                        setResultats(null);
-                    }
+                            setInputValue("");
+                            setResultats(null);
+                        }
 
-                }}
-                renderInput={(params) => (
-                    <TextField
-                        {...params}
-                        placeholder="Recherche : épreuve, salle, horaire ou étudiant"
-                        slotProps={{
-                            input: {
-                                ...params.InputProps,
-                                endAdornment: (
-                                    <>
-                                        {params.InputProps.endAdornment}
+                    }}
+                    renderInput={(params) => (
+                        <TextField
+                            {...params}
+                            placeholder="Recherche : épreuve, salle, horaire ou étudiant"
+                            slotProps={{
+                                input: {
+                                    ...params.InputProps,
+                                    endAdornment: (
+                                        <>
+                                            {params.InputProps.endAdornment}
 
-                                        <Tooltip title="Rechercher">
-                                            <IconButton sx={{ p: '10px' }} aria-label="search" >
-                                                <Search />
-                                            </IconButton>
-                                        </Tooltip>
+                                            <Tooltip title="Rechercher">
+                                                <IconButton sx={{ p: '10px' }} aria-label="search" >
+                                                    <Search />
+                                                </IconButton>
+                                            </Tooltip>
 
-                                        <Divider sx={{ height: 28, m: 0.5 }} orientation="vertical" />
+                                            <Divider sx={{ height: 28, m: 0.5 }} orientation="vertical" />
 
-                                        <Tooltip title="Afficher la liste">
-                                            <IconButton sx={{ p: '10px' }} aria-label="search">
-                                                <FormatListBulleted />
-                                            </IconButton>
-                                        </Tooltip>
-                                    </>
-                                ),
-                            },
-                        }}
-                    />
-                )}
-            />
-        </Stack >
+                                            <Tooltip title="Afficher la liste">
+                                                <IconButton sx={{ p: '10px' }} aria-label="search">
+                                                    <FormatListBulleted />
+                                                </IconButton>
+                                            </Tooltip>
+                                        </>
+                                    ),
+                                },
+                            }}
+                        />
+                    )}
+                />
+            </Stack >
 
+            {/* Modal bordereau */}
+            <BordereauxModal ouvert={bordereauModalOpen} onFermer={() => setBordereauModalOpen(false)} />
+
+            {/* Modal Depot de copies */}
+            <ScanModal ouvert={depotCopiesModalOpen} 
+            setOuvertModalScan={setDepotCopiesModalOpen} 
+            idSession={props.sessionId.toString()} 
+            setSuccess={setOpenSnackbar}
+            setCodeScan={setCodeScan} />
+
+            {/* Snackbar de succès après le scan */}
+
+            <Snackbar
+                open={openSnackbar}
+                autoHideDuration={6000}
+                onClose={() => setOpenSnackbar(false)}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+            >
+                <Alert onClose={() => setOpenSnackbar(false)} severity="success" sx={{ width: '100%' }}>
+                    Scan réussi ! Code : {codeScan}
+                </Alert>
+            </Snackbar>
+        </>
     );
 } export default SearchBar;

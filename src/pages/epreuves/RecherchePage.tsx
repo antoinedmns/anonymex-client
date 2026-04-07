@@ -4,7 +4,7 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { Alert, Chip, Snackbar } from '@mui/material';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getRechercheHeure, getRechercheSalle, getRechercheSalleHeure } from '../../contracts/recherche';
+import { getRechercheEtudiant, getRechercheHeure, getRechercheSalle, getRechercheSalleHeure } from '../../contracts/recherche';
 import { getEpreuve, type APIEpreuve } from '../../contracts/epreuves';
 import { formatterDateEntiere } from '../../utils/dateUtils';
 import Check from '@mui/icons-material/Check';
@@ -64,6 +64,10 @@ export default function RecherchePage(): ReactElement {
                         return;
                     }
                     response = await getRechercheSalleHeure(+sessionId, value1, value2);
+                    break;
+                
+                case "etudiant":
+                    response = await getRechercheEtudiant(+sessionId, value1);
                     break;
 
                 default:
