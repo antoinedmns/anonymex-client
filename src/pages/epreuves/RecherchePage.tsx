@@ -172,7 +172,7 @@ export default function RecherchePage(): ReactElement {
                 <SearchBar sessionId={+sessionId!} handleBack={handleBackEpreuve} nomHandleBack={`Retour à la session ${sessionId}`} />
 
 
-                <Stack direction="column" alignItems="flex-start" spacing={4} mt={4}>
+                <Stack direction="column" alignItems="flex-start" spacing={4} mt={4} width={'60%'}>
 
                     {/* Affichage du titre du résultat de la recherche */}
                     <Typography variant="h4" fontWeight={'bold'}>
@@ -181,7 +181,7 @@ export default function RecherchePage(): ReactElement {
 
 
                     {/* Affichage des différents types de tri possibles */}
-                    <Stack direction="row" spacing={2} flexWrap="wrap">
+                    <Stack direction="row" spacing={2}>
 
                         {/* Toutes les épreuves*/}
                         <Chip
