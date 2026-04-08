@@ -56,7 +56,7 @@ export function EpreuveModal({ codeEpreuve, sessionId, tab }: EpreuveModalProps)
         return [
             {
                 label: "Details",
-                content: <DetailsEpreuve epreuve={epreuveActive} setNumeroOnglet={setNumeroOnglet} setSalleDefault={setSalleDefault} setSalleDefaultNumb={setSalleDefaultNumb}/>
+                content: <DetailsEpreuve epreuve={epreuveActive} setNumeroOnglet={setNumeroOnglet} setSalleDefault={setSalleDefault} setSalleDefaultNumb={setSalleDefaultNumb} />
             },
             {
                 label: "Liste étudiants",
@@ -76,14 +76,9 @@ export function EpreuveModal({ codeEpreuve, sessionId, tab }: EpreuveModalProps)
                 content: <MenuGenererMatExam menuColor={themeEpreuves.status[epreuveActive.statut]} idSession={sessionId} codeEpreuve={epreuveActive.code} />
             }] : []),
 
-            ...(epreuveActive.statut === 3 ? [{
+            ...(epreuveActive.statut === 3 || epreuveActive.statut === 6 ? [{
                 label: "Scanner copies",
                 content: <MenuScanCopies codeUE={epreuveActive.code} idSession={sessionId} menuColor={themeEpreuves.status[epreuveActive.statut]} onIncidentCreated={handleIncidentCreated} onIncidentResolved={handleIncidentResolved} />
-            }] : []),
-
-            ...(epreuveActive.statut >= 4 ? [{
-                label: "Exporter les notes",
-                content: <MenuScanCopies codeUE={epreuveActive.code} idSession={sessionId} menuColor={themeEpreuves.status[epreuveActive.statut]} />
             }] : []),
 
             ...(epreuveActive.statut >= 3 && incidentsCount > 0 ? [{
@@ -94,9 +89,14 @@ export function EpreuveModal({ codeEpreuve, sessionId, tab }: EpreuveModalProps)
             ...(epreuveActive.statut >= 3 ? [{
                 label: "Présence",
                 content: <MenuPresence epreuve={epreuveActive} salleDefaultNumb={salleDefaultNumb} />
+            }] : []),
+
+            ...(epreuveActive.statut >= 3 ? [{
+                label: "Export",
+                content: <MenuScanCopies codeUE={epreuveActive.code} idSession={sessionId} menuColor={themeEpreuves.status[epreuveActive.statut]} />
             }] : [])
         ];
-    }, [epreuveActive, handleIncidentCreated, handleIncidentResolved, incidentsCount, sessionId]);
+    }, [epreuveActive, handleIncidentCreated, handleIncidentResolved, incidentsCount, sessionId, salleDefault, salleDefaultNumb]);
 
     useEffect(() => {
         if (!tab) return;

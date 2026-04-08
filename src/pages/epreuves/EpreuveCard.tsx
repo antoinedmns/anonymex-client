@@ -10,6 +10,7 @@ import PrintDisabledIcon from '@mui/icons-material/PrintDisabled';
 import DoneIcon from '@mui/icons-material/Done';
 import DocumentScannerIcon from '@mui/icons-material/DocumentScanner';
 import { type JSX } from "react";
+import { Create } from "@mui/icons-material";
 
 const timeFormatter = new Intl.DateTimeFormat('fr-FR', {
     hour: '2-digit',
@@ -23,7 +24,7 @@ const epreuveStatutIcons: Record<EpreuveStatut, JSX.Element> = {
     3: <HourglassTopIcon />,
     4: <DocumentScannerIcon />,
     5: <DoneIcon />,
-    6: <HourglassTopIcon />,
+    6: <Create />,
 }
 
 type EpreuveCardProps = {

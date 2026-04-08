@@ -6,7 +6,7 @@ export const themeEpreuves = {
         1: grey[500],
         2: green[500],
         6: blue[300],
-        3: indigo[500],
+        3: indigo[400],
         4: purple[300],
         5: deepPurple[200],
     }

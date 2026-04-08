@@ -117,7 +117,11 @@ export default function MenuPresence({ epreuve, salleDefaultNumb }: MenuPresence
             setIsEditingPresence(false);
             setNbPresentError(null);
             setSuccessMajPresents(true);
-            patchEpreuve(epreuve.code, { nbPresents: nextValue });
+
+            // Mettre à jour l'épreuve dans le cache
+            // Si le statut était "présences non-saisies" (6), on le passe à "présences saisies" (3)
+            const nvStatut = epreuve.statut === 6 ? 3 : epreuve.statut;
+            patchEpreuve(epreuve.code, { nbPresents: nextValue, statut: nvStatut });
         }
         catch (error) {
             console.error(error);
