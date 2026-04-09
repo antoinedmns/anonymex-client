@@ -23,7 +23,7 @@ export const EpreuveSchema = z.object({
     date: z.number().int().positive(), // timestamp depuis epoch en millisecondes
     duree: z.number().int().positive(), // durée en minutes
     copies: z.number().int().nonnegative().optional(), // nombre de copies déposées
-    inscrits: z.number().int().positive().optional(), // nombre total de copies attendues
+    copiesTotal: z.number().int().positive().optional(), // nombre total de copies attendues
     incidents: z.number().int().nonnegative().optional(), // nombre d'incidents de lecture
     nbPresents: z.number().int().nonnegative().optional() // nombre de présents, si saisi
 });

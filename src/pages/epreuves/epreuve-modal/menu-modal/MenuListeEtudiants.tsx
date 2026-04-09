@@ -1,6 +1,6 @@
 import Box from '@mui/material/Box';
-import { DataGrid, type GridToolbarProps, type ToolbarPropsOverrides } from '@mui/x-data-grid';
-import { useEffect, useState, type JSX } from 'react';
+import { DataGrid } from '@mui/x-data-grid';
+import { useEffect, useState } from 'react';
 import { frFR } from '@mui/x-data-grid/locales';
 
 import { getColumns } from './composantsListe/colonnesListe';
@@ -46,7 +46,7 @@ function MenuListeEtudiants(props: MenuListeEtudiantsProps) {
     const [tooltipOpen, setTooltipOpen] = useState(false);
 
     const [salleFilter, setSalleFilter] = useState<string>(props.salleDefault);
-    const [hovered, setHovered] = useState<string | null>(null);
+    const [hovered] = useState<string | null>(null);
 
     const [selectedRows, setSelectedRows] = useState<APIConvocation[]>([]);
 
@@ -163,7 +163,7 @@ function MenuListeEtudiants(props: MenuListeEtudiantsProps) {
             {confirmModalTransfer}
 
 
-            <Box sx={{ height: 500 }}>
+            <Box sx={{ height: 570 }}>
 
                 <DataGrid
 
@@ -209,7 +209,7 @@ function MenuListeEtudiants(props: MenuListeEtudiantsProps) {
                     density='compact'
                     rows={salleFilter === "x" ? rows : rows.filter(row => row.codeSalle === salleFilter)}
                     columns={columns.filter(col => col.field !== 'idSession' && col.field !== 'codeEpreuve')}
-                    hideFooter
+                    
                     checkboxSelection
 
                     processRowUpdate={(newRow, oldRow) =>

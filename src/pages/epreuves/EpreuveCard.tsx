@@ -46,7 +46,7 @@ export const EpreuveCard = function EpreuveCard(props: EpreuveCardProps): JSX.El
         color: themeEpreuves.status[epreuve.statut],
     } : statutInconnu;
 
-    const formattedTime = timeFormatter.format(new Date(epreuve.date * 1000));
+    const formattedTime = timeFormatter.format(new Date(epreuve.date));
 
     return (
         <Card variant="outlined" sx={{ backgroundColor: grey[50], borderRadius: 2 }} >

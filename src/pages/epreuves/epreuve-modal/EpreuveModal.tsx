@@ -118,7 +118,7 @@ export function EpreuveModal({ codeEpreuve, sessionId, tab }: EpreuveModalProps)
     }
 
     return (
-        <Modal titre={epreuveActive.code} onClose={() => { fermer(); }} width="1200px" height="650px" newbgcolor={themeEpreuves.status[epreuveActive.statut] + '4F'} idSession={sessionId}>
+        <Modal titre={epreuveActive.code} onClose={() => { fermer(); }} width="1200px" height="650px" newbgcolor={themeEpreuves.status[epreuveActive.statut] + '4F'}>
             <Stack>
                 <Stack >
                     <Tabs

@@ -63,7 +63,7 @@ function DetailsEpreuve({ epreuve, setNumeroOnglet, setSalleDefault, setSalleDef
     const [dureeMinutes, setDureeMinutes] = React.useState<number>(epreuve.duree ? epreuve.duree : 0);
 
 
-    const [nbInscritsEpreuve] = React.useState<string>(epreuve.inscrits ? (`${epreuve.inscrits} inscrits`) : "Aucun inscrit");
+    const [nbInscritsEpreuve] = React.useState<string>(epreuve.copiesTotal ? (`${epreuve.copiesTotal} inscrits`) : "Aucun inscrit");
 
     const [ouvrirModalDate, setOuvrirModalDate] = React.useState<boolean>(false);
     const [ouvrirModalHoraire, setOuvrirModalHoraire] = React.useState<boolean>(false);
@@ -291,7 +291,7 @@ function DetailsEpreuve({ epreuve, setNumeroOnglet, setSalleDefault, setSalleDef
                         ) : (
                             salles.map((salle) => (
                                 (salle.nbEtudiants > 0) && (
-                                    <EpreuveSallesCompo key={salle.nom} salle={salle.nom} sallesDispo={salles} nbEtudiants={salle.nbEtudiants} nbEtuMMax={epreuve.inscrits ? epreuve.inscrits : 0} color={themeEpreuves.status[epreuve.statut]} onTransfert={handleTransfert} onAjouter={handleAjout} onDetails={handleDetails} />
+                                    <EpreuveSallesCompo key={salle.nom} salle={salle.nom} sallesDispo={salles} nbEtudiants={salle.nbEtudiants} nbEtuMMax={epreuve.copiesTotal ? epreuve.copiesTotal : 0} color={themeEpreuves.status[epreuve.statut]} onTransfert={handleTransfert} onAjouter={handleAjout} onDetails={handleDetails} />
                                 )
                             ))
                         )
