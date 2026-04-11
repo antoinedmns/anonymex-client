@@ -199,17 +199,15 @@ function SearchBar(props: SearchBarProps) {
                     // Style du conteneur !
                     sx={{ width: 600, maxWidth: '100%' }}
 
-                    getOptionLabel={() => ""}
+                    getOptionLabel={(option) => typeof option === 'string' ? option : formatResultat(option)}
 
                     renderOption={(props, option) => {
-                        const { key, ...optionProps } = props;
 
                         return (
                             // Disposition en ligne avec une icône à gauche et le texte à droite (et possiblement un texte supplémentaire)
                             <Box
-                                key={key}
                                 component="li"
-                                {...optionProps}
+                                {...props}
                                 sx={{
                                     display: 'flex',
                                     alignItems: 'center',
@@ -260,7 +258,10 @@ function SearchBar(props: SearchBarProps) {
                     }}
 
                     // Gère les résultats de la recherche à chaque changement de l'input
-                    onInputChange={(_, newInputValue) => {
+                    onInputChange={(_, newInputValue, reason) => {
+
+                        if (reason === "reset") return; // Empêche la recherche de se déclencher quand on clique sur un résultat (car ça réinitialise l'input)
+
                         setInputValue(newInputValue);
 
                         if (newInputValue.trim() === "" || newInputValue.trim().length < 3) {
@@ -303,7 +304,7 @@ function SearchBar(props: SearchBarProps) {
                                             {params.InputProps.endAdornment}
 
                                             <Tooltip title="Rechercher">
-                                                <IconButton sx={{ p: '10px' }} aria-label="search" 
+                                                <IconButton sx={{ p: '10px' }} aria-label="search"
                                                     onClick={() => {
                                                         if (highlightedOption) {
                                                             handleClickResultat(highlightedOption);
@@ -355,21 +356,21 @@ function SearchBar(props: SearchBarProps) {
                                                         </Stack>
 
                                                         <Stack direction="row" spacing={1} alignItems="center">
-                                                            <MeetingRoom fontSize="small"/>
+                                                            <MeetingRoom fontSize="small" />
                                                             <Typography variant="body2">
                                                                 <b>Salle</b> : TD.36
                                                             </Typography>
                                                         </Stack>
 
                                                         <Stack direction="row" spacing={1} alignItems="center">
-                                                            <AccessTime fontSize="small"/>
+                                                            <AccessTime fontSize="small" />
                                                             <Typography variant="body2">
                                                                 <b>Horaire</b> : hier, 20h…
                                                             </Typography>
                                                         </Stack>
 
                                                         <Stack direction="row" spacing={1} alignItems="center">
-                                                            <Person fontSize="small"/>
+                                                            <Person fontSize="small" />
                                                             <Typography variant="body2">
                                                                 <b>Étudiant</b> : 2201234
                                                             </Typography>
@@ -397,11 +398,11 @@ function SearchBar(props: SearchBarProps) {
             <BordereauxModal ouvert={bordereauModalOpen} onFermer={() => setBordereauModalOpen(false)} />
 
             {/* Modal Depot de copies */}
-            <ScanModal ouvert={depotCopiesModalOpen} 
-            setOuvertModalScan={setDepotCopiesModalOpen} 
-            idSession={props.sessionId.toString()} 
-            setSuccess={setOpenSnackbar}
-            setCodeScan={setCodeScan} />
+            <ScanModal ouvert={depotCopiesModalOpen}
+                setOuvertModalScan={setDepotCopiesModalOpen}
+                idSession={props.sessionId.toString()}
+                setSuccess={setOpenSnackbar}
+                setCodeScan={setCodeScan} />
 
             {/* Snackbar de succès après le scan */}
 
