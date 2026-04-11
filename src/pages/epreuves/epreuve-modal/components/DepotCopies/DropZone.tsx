@@ -7,9 +7,12 @@ import BoutonStandard from "../BoutonStantard";
 import { useEffect, useState } from "react";
 
 interface DropZoneProps {
+    title?: string;
+    subtitle?: string;
     inputRef: React.RefObject<HTMLInputElement | null>;
     setFichiers: (files: FileList | null) => void;
     fichiers: FileList | null;
+    formatAcceptes?: string[]; // Ex: ['pdf', 'png', 'jpg', 'zip', 'rar']
 }
 
 
@@ -103,10 +106,10 @@ export function DropZone(props: DropZoneProps) {
         <Stack spacing={1} alignItems="center" width="100%" p={1}>
             <Stack alignItems="center" spacing={1} pb={2}>
                 <Typography variant="h4" fontWeight={700} color={grey[800]}>
-                    Dépôt copies scannées
+                    {props.title || "Dépôt copies scannées"}
                 </Typography>
                 <Typography variant="body1" color={grey[700]} textAlign="center">
-                    Formats acceptés : PDF, PNG, JPG, ZIP et RAR.
+                    {props.subtitle || "Formats acceptés : PDF, PNG, JPG, ZIP et RAR."}
                 </Typography>
             </Stack>
 
@@ -146,7 +149,7 @@ export function DropZone(props: DropZoneProps) {
                         id="file-upload"
                         ref={props.inputRef}
                         type="file"
-                        accept=".pdf"
+                        accept={props.formatAcceptes ? props.formatAcceptes.map(ext => `.${ext}`).join(",") : ".pdf"}
                         onChange={(e) => handleChange(e)}
                         style={{ display: "none" }}
                     />

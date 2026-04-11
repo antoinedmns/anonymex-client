@@ -6,6 +6,7 @@ import { createSession } from "../../../../../contracts/sessions";
 import { URL_API_BASE } from "../../../../../utils/api";
 import { useLocation, useNavigate } from "react-router-dom";
 import Alert from "@mui/material/Alert";
+import { Snackbar } from "@mui/material";
 
 type Props = {
     onClose: () => void;
@@ -99,13 +100,15 @@ export default function SessionParentEtape({ onClose, importSessionId }: Props) 
                         onValidate={handleUploadFile}
                     />
                 )}
+            </Modal>
 
-                {erreur && (
-                    <Alert severity="error">
+            {erreur && (
+                <Snackbar open={true} autoHideDuration={10000} onClose={() => setErreur(null)}>
+                    <Alert severity="error" sx={{ width: '100%' }}>
                         {erreur}
                     </Alert>
-                )}
-            </Modal>
+                </Snackbar>
+            )}
         </>
     );
 }

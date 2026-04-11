@@ -1,7 +1,8 @@
-import { Alert, Box, colors, Input, Stack, Typography } from "@mui/material";
+import { Alert, Box, Stack } from "@mui/material";
 import { SessionModalBouton } from "../composantsFormulaireSession";
 import React, { useState } from "react";
 import { Check } from "@mui/icons-material";
+import { DropZone } from "../../../../epreuves/epreuve-modal/components/DepotCopies/DropZone";
 
 type Props = {
     fichier: File | null;
@@ -9,58 +10,44 @@ type Props = {
     onValidate: () => Promise<void>;
 };
 
-export default function SessionEtapeTeleversement({fichier,setFichier,onValidate}: Props) {
+export default function SessionEtapeTeleversement({ fichier, setFichier, onValidate }: Props) {
 
-    const [error, setError] = React.useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
 
-
-    const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-
-        if (!file) {
-            setError("Aucun fichier sélectionné.");
-            setFichier(null);
-            return;
-        }
-
-        const isXlsx = file.name.toLowerCase().endsWith(".xlsx");
-
-        if (!isXlsx) {
-            setError("Veuillez importer un fichier Excel (.xlsx).");
-            setFichier(null);
-            return;
-        }
-
-        setError(null);
-        setFichier(file);
-    };
+    const inputRef = React.useRef<HTMLInputElement | null>(null);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!fichier) {
-            setError("Veuillez sélectionner un fichier XLSX.");
-            return;
+        try {
+            setIsLoading(true);
+            await onValidate();
+        } finally {
+            setIsLoading(false);
         }
-
-        setIsLoading(true);
-        await onValidate();
-        setIsLoading(false);
     };
 
     return (
-        <Stack component="form" onSubmit={handleSubmit} justifyContent={'space-between'} flexDirection={'column'} gap={2} margin={4}>
-            <Typography variant="body1">Veuillez téléverser un fichier XLSX ci-dessous pour finaliser la création.</Typography>
+        <>
+            <Stack component="form" onSubmit={handleSubmit} justifyContent={'space-between'} flexDirection={'column'} spacing={2} margin={4}>
 
-            <Input type='file'  inputProps={{ accept: '.xlsx' }} onChange={handleUpload} sx={{
-                border: '3px dashed', borderColor: colors.blue[400], padding: '1.5rem', borderRadius: 3, '&:before': { border: 'none', position: 'initial' }, '&:before:hover': { border: 'none' } }}></Input>
+                <DropZone
+                    title=" "
+                    subtitle="Veuillez importer un fichier Excel (.xlsx) contenant les données nécessaires à la création de la session."
+                    inputRef={inputRef}
+                    setFichiers={(files) => setFichier(files ? files[0] : null)}
+                    fichiers={null}
+                    formatAcceptes={['xlsx']}
+                />
 
-            {error && <Alert sx={{ mt: 1 }}severity="error">{error}</Alert>}
+                {fichier && fichier.name.endsWith(".xlsx") && (
+                    <Alert severity="success">Fichier sélectionné : {fichier.name}</Alert>
+                )}
 
-        <Box mt={1} />
-        <SessionModalBouton label="Importer les données" loading={isLoading} endIcon={<Check />} disabled={!fichier}/>
-        
-        </Stack>
+                <Box mt={1} />
+                <SessionModalBouton label="Importer les données" loading={isLoading} endIcon={<Check />} disabled={!fichier} />
+
+            </Stack>
+        </>
     );
 }
