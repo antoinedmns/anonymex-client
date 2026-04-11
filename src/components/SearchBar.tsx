@@ -27,7 +27,7 @@ type RechercheResultat =
     { type: 4; action: number; } |
     { type: 5; numero: number; };
 
-// Todo : ajouter la couleur pour chaque icone
+
 const rechercheResultatIcones: Record<RechercheResultat['type'], ReactElement> = {
     0: <StickyNote2 fontSize="small" />,
     1: <MeetingRoom fontSize="small" />,
@@ -57,7 +57,7 @@ function formatResultat(option: RechercheResultat): string {
             }
 
             if (option.action === 3) {
-                return "Changer de session (non implémenté)";
+                return "Changer de session";
             }
             return `Action : ${option.action}`;
         case 5:
@@ -91,15 +91,13 @@ function SearchBar(props: SearchBarProps) {
     // Valeur de l'input de recherche
     const [inputValue, setInputValue] = useState("");
 
-    // Gère le clic sur un résultat de recherche (Epreuve: fonctionnel, autres types: à implémenter)
+    // Gère le clic sur un résultat de recherche
     async function handleClickResultat(option: RechercheResultat) {
 
         switch (option.type) {
             // Epreuve
             case 0:
                 const epreuve = await getEpreuve(props.sessionId, option.code);
-
-                console.log("Détails de l'épreuve :", epreuve);
 
                 if (epreuve.status === 200 && epreuve.data) {
                     const res_epreuve = epreuve.data;
@@ -135,8 +133,8 @@ function SearchBar(props: SearchBarProps) {
                 }
 
                 if (option.action === 3) {
-                    // Changer de session (non implémenté)
-                    // navigate(`/sessions/${props.sessionId}/epreuves`);
+                    // Changer de session (retour à l'accueil pour choisir une autre session)
+                    navigate(`/accueil`);
                 }
                 break;
 
