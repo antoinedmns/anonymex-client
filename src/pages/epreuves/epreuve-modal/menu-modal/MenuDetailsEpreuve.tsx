@@ -22,10 +22,16 @@ import { themeEpreuves } from "../../../../theme/epreuves";
 import { getConvocations, postConvocationsTransfert } from "../../../../contracts/convocations";
 
 import { useConfirmTransfer } from "./composantsListe/useConfirmTransfer";
+import BoutonStandard from "../components/BoutonStantard";
+import { blue, indigo } from "@mui/material/colors";
+import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
+import { URL_API_BASE } from "../../../../utils/api";
 
+import SessionParentEtape from "../../../accueil/sessions/session-modal/creer-session/SessionParentEtape";
 
 export interface DetailsEpreuveProps {
     epreuve: APIEpreuve;
+    statut: number;
     setNumeroOnglet: (value: 0 | 1 | 2 | 3 | 4) => void;
     setSalleDefault: (value: string) => void;
     setSalleDefaultNumb: (value: number) => void;
@@ -49,7 +55,7 @@ function formatDate(date: number): string {
 
 
 
-function DetailsEpreuve({ epreuve, setNumeroOnglet, setSalleDefault, setSalleDefaultNumb }: DetailsEpreuveProps) {
+function DetailsEpreuve({ epreuve, setNumeroOnglet, setSalleDefault, setSalleDefaultNumb, statut }: DetailsEpreuveProps) {
 
     const [modifEpreuve, setModifEpreuve] = React.useState<boolean>(false);
     const [modifDate, setModifDate] = React.useState<boolean>(false);
@@ -63,7 +69,7 @@ function DetailsEpreuve({ epreuve, setNumeroOnglet, setSalleDefault, setSalleDef
     const [dureeMinutes, setDureeMinutes] = React.useState<number>(epreuve.duree ? epreuve.duree : 0);
 
 
-    const [nbInscritsEpreuve] = React.useState<string>(epreuve.copiesTotal ? (`${epreuve.copiesTotal} inscrits`) : "Aucun inscrit");
+    const [nbInscritsEpreuve] = React.useState<string>(epreuve.nbPresents ? (`${epreuve.nbPresents} inscrits`) : "Aucun inscrit");
 
     const [ouvrirModalDate, setOuvrirModalDate] = React.useState<boolean>(false);
     const [ouvrirModalHoraire, setOuvrirModalHoraire] = React.useState<boolean>(false);
@@ -75,6 +81,8 @@ function DetailsEpreuve({ epreuve, setNumeroOnglet, setSalleDefault, setSalleDef
 
     const [salles, setSalles] = React.useState<{ nom: string, nbEtudiants: number }[]>([]);
     const [loadingSalles, setLoadingSalles] = React.useState<boolean>(true);
+
+    const [reimportOuvert, setReimportOuvert] = React.useState<boolean>(false);
 
     const { afficherErreur } = useSnackbarGlobal()
 
@@ -137,7 +145,7 @@ function DetailsEpreuve({ epreuve, setNumeroOnglet, setSalleDefault, setSalleDef
 
         // Afficher chargement & erreur si besoin
 
-        const result = await updateEpreuve(epreuve.session, epreuve.code, { date_epreuve: Math.round(newVal / 60000) });
+        const result = await updateEpreuve(epreuve.session, epreuve.code, { date_epreuve: newVal })
 
         if (result.status == 200) {
             console.log("Mise à jour de la date réussie");
@@ -165,7 +173,7 @@ function DetailsEpreuve({ epreuve, setNumeroOnglet, setSalleDefault, setSalleDef
         setModifHoraire(false);
 
         console.log("Sauvegarde de l'horaire :", date, "durée :", duree);
-        const result = await updateEpreuve(epreuve.session, epreuve.code, { date_epreuve: Math.round(date / 60000), duree: duree });
+        const result = await updateEpreuve(epreuve.session, epreuve.code, { date_epreuve: date, duree: duree });
 
         if (result.status == 200) {
             console.log("Mise à jour de l'horaire réussie");
@@ -251,12 +259,23 @@ function DetailsEpreuve({ epreuve, setNumeroOnglet, setSalleDefault, setSalleDef
         setNumeroOnglet(1);
     }
 
+    const handleExport = () => {
+        const url = `${URL_API_BASE}/documents/session/${epreuve.session}/epreuve/${epreuve.code}/notes?format=csv`;
+        window.open(url, '_blank');
+    }
+
+    const handleReimport = () => {
+        setReimportOuvert(true);
+    }
+
 
     return (
 
         <>
             {confirmModalTransfer}
-
+            {reimportOuvert && (
+                {}
+            )}
             <ModalConfirmationChangements ouvert={ouvrirModalDate} setOuvert={setOuvrirModalDate} handleSave={handleSaveDate} oldVal={dateEpreuve} newVal={valIntermediaireDate} type="date" />
             <ModalConfirmationChangementsHoraire ouvert={ouvrirModalHoraire} setOuvert={setOuvrirModalHoraire} handleSave={handleSaveHoraire} ancien={{ date: dateEpreuve, duree: dureeMinutes }} nouveau={{ date: valIntermediaireHoraireDebut, duree: valIntermediaireDuree }} />
 
@@ -267,10 +286,15 @@ function DetailsEpreuve({ epreuve, setNumeroOnglet, setSalleDefault, setSalleDef
                     <EpreuveCaracteristique titre="Date" sousTitre={formatDate(dateEpreuve)} fonctionModif={handleModifDate} modif={modifDate} AdaptedTextField={() => (<DateTextField date={dateEpreuve} fonctionSave={confirmSaveDate} />)} color={themeEpreuves.status[epreuve.statut]} />
                     <EpreuveCaracteristique titre="Horaires" sousTitre={calcHoraires(dateEpreuve, dureeMinutes)} fonctionModif={handleModifHoraire} modif={modifHoraire} AdaptedTextField={() => (<HorairesTextField date={dateEpreuve} dureeMinutes={dureeMinutes} fonctionSave={confirmSaveHoraire} />)} color={themeEpreuves.status[epreuve.statut]} />
                     <EpreuveCaracteristique titre="Nombre inscrits" sousTitre={nbInscritsEpreuve} fonctionModif={handleModifNbInscrits} modif={modifNbInscrits} color={themeEpreuves.status[epreuve.statut]} />
-                    <Stack>
-                        <Button variant="contained" sx={{ bgcolor: themeEpreuves.status[epreuve.statut] + "60", color: colors.grey[900], py: 1, boxShadow: 'none', '&:hover': { boxShadow: 'none' } }} startIcon={<FolderIcon sx={{ color: colors.grey[800] }} />}>
+                    <Stack spacing={1}>
+                        <BoutonStandard onClick={handleReimport} height={50} color={indigo[500]} icone={<FolderIcon sx={{ color: colors.grey[800] }} />}>
                             Réimporter depuis le tableur
-                        </Button>
+                        </BoutonStandard>
+                        {statut > 2 && (
+                            <BoutonStandard onClick={handleExport} height={50} color={blue[500]} icone={<ArrowDownwardIcon sx={{ color: colors.grey[800] }} />}>
+                                Exporter les notes
+                            </BoutonStandard>
+                        )}
                     </Stack>
                 </Stack>
 
@@ -291,7 +315,7 @@ function DetailsEpreuve({ epreuve, setNumeroOnglet, setSalleDefault, setSalleDef
                         ) : (
                             salles.map((salle) => (
                                 (salle.nbEtudiants > 0) && (
-                                    <EpreuveSallesCompo key={salle.nom} salle={salle.nom} sallesDispo={salles} nbEtudiants={salle.nbEtudiants} nbEtuMMax={epreuve.copiesTotal ? epreuve.copiesTotal : 0} color={themeEpreuves.status[epreuve.statut]} onTransfert={handleTransfert} onAjouter={handleAjout} onDetails={handleDetails} />
+                                    <EpreuveSallesCompo key={salle.nom} salle={salle.nom} sallesDispo={salles} nbEtudiants={salle.nbEtudiants} nbEtuMMax={epreuve.nbPresents ? epreuve.nbPresents : 0} color={themeEpreuves.status[epreuve.statut]} onTransfert={handleTransfert} onAjouter={handleAjout} onDetails={handleDetails} />
                                 )
                             ))
                         )

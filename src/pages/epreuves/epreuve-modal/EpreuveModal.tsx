@@ -56,7 +56,7 @@ export function EpreuveModal({ codeEpreuve, sessionId, tab }: EpreuveModalProps)
         return [
             {
                 label: "Details",
-                content: <DetailsEpreuve epreuve={epreuveActive} setNumeroOnglet={setNumeroOnglet} setSalleDefault={setSalleDefault} setSalleDefaultNumb={setSalleDefaultNumb} />
+                content: <DetailsEpreuve statut={epreuveActive.statut} epreuve={epreuveActive} setNumeroOnglet={setNumeroOnglet} setSalleDefault={setSalleDefault} setSalleDefaultNumb={setSalleDefaultNumb} />
             },
             {
                 label: "Liste étudiants",
@@ -89,11 +89,6 @@ export function EpreuveModal({ codeEpreuve, sessionId, tab }: EpreuveModalProps)
             ...(epreuveActive.statut >= 3 ? [{
                 label: "Présence",
                 content: <MenuPresence epreuve={epreuveActive} salleDefaultNumb={salleDefaultNumb} />
-            }] : []),
-
-            ...(epreuveActive.statut >= 3 ? [{
-                label: "Export",
-                content: <MenuScanCopies codeUE={epreuveActive.code} idSession={sessionId} menuColor={themeEpreuves.status[epreuveActive.statut]} />
             }] : [])
         ];
     }, [epreuveActive, handleIncidentCreated, handleIncidentResolved, incidentsCount, sessionId, salleDefault, salleDefaultNumb]);

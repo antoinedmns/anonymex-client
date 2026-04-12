@@ -11,7 +11,7 @@ type Props = {
     onNext: () => void;
 };
 
-export default function SessionEtapeTexte({nomSession, date, setNomSession, setDate, onNext}: Props) {
+export default function SessionEtapeTexte({ nomSession, date, setNomSession, setDate, onNext }: Props) {
 
     const [errors, setErrors] = React.useState({
         nom: null as string | null,
@@ -38,18 +38,16 @@ export default function SessionEtapeTexte({nomSession, date, setNomSession, setD
         if (newErrors.nom || newErrors.date) return;
 
         setLoading(true);
-        setTimeout(() => {
-            setLoading(false);
-            onNext();
-        }, 300);
+        onNext();
+        setLoading(false);
     };
 
     return (
         <Stack component="form" onSubmit={handleSubmit} justifyContent={'space-between'} flexDirection={'column'} gap={2} margin={4}>
 
-            <SessionChampTexte label="Nom de la session" name="nom" onChange={setNomSession} error={errors.nom} value={nomSession}/>
-            <SessionChampDate label="Année" onChange={setDate} error={errors.date} value={date} name={"annee"}/>
-            <SessionModalBouton label="Étape suivante" loading={loading} endIcon={<ArrowForwardIosOutlined />} disabled={nomSession.length < 1 || date.length < 1}/>
+            <SessionChampTexte label="Nom de la session" name="nom" onChange={setNomSession} error={errors.nom} value={nomSession} />
+            <SessionChampDate label="Année" onChange={setDate} error={errors.date} value={date} name={"annee"} />
+            <SessionModalBouton label="Étape suivante" loading={loading} endIcon={<ArrowForwardIosOutlined />} disabled={nomSession.length < 1 || date.length < 1} />
 
         </Stack>
     );
