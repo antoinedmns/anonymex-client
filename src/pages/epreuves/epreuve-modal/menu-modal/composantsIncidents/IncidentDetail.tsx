@@ -151,7 +151,7 @@ export default function IncidentDetail(props: IncidentDetailProps) {
 
         if (note === undefined || note === null) {
             newErrors.note = "La note est requise.";
-        } else if (note < 0 || note > 20) {
+        } else if (note < 0 || note > 80) {
             newErrors.note = "La note doit être comprise entre 0 et 20.";
         } else if (isNaN(note)) {
             newErrors.note = "La note doit être un nombre.";
