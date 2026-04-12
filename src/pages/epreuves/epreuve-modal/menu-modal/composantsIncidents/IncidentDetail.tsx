@@ -257,7 +257,7 @@ export default function IncidentDetail(props: IncidentDetailProps) {
                             onChange={(e) => {
                                 const val = e.target.value;
                                 setNoteQuart(Number(val) * 4);
-                                if (formulaireEstValide(numero, Number(val))) {
+                                if (formulaireEstValide(numero, Number(val) * 4)) {
                                     setEnvoiOK(true);
                                 } else {
                                     setEnvoiOK(false);
