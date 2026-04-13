@@ -1,33 +1,16 @@
 import { useState } from 'react';
-import {
-    Dialog,
-    DialogTitle,
-    DialogActions,
-    Button,
-    Modal,
-    Stack
-} from '@mui/material';
-
-
-import { colors } from "@mui/material";
-import Typography from '@mui/material/Typography';
-import CheckIcon from '@mui/icons-material/Check';
-import CloseIcon from '@mui/icons-material/Close';
-import type { JSX } from '@emotion/react/jsx-runtime';
-import { grey, red } from '@mui/material/colors';
+import ModalConfirmationBase from '../composantsEpreuves/ModalConfirmationBase';
 
 
 export function useConfirmDelete() {
     const [ouvert, setOuvert] = useState(false);
     const [students, setStudents] = useState<string[]>([]);
-    const [nbStudents, setNbStudents] = useState<number>(0);
 
     const [resolver, setResolver] = useState<((value: string[]) => void) | null>(null);
 
 
-    const confirmDelete = (students: string[]): Promise<string[]> => {
-        setStudents(students);
-        setNbStudents(students.length);
+    const confirmDelete = (nextStudents: string[]): Promise<string[]> => {
+        setStudents(nextStudents);
         setOuvert(true);
 
         return new Promise(resolve => {
@@ -38,41 +21,30 @@ export function useConfirmDelete() {
     const handleClose = (value: string[]) => {
         setOuvert(false);
         resolver?.(value);
+        setResolver(null);
     };
 
-    const affichageListe = (etudiant: string): JSX.Element => {
-
-        return <>
-            <Typography sx={{ color: grey[900] }} variant="h5" fontWeight="500">{`Numéro Étudiant: `}</Typography>
-            <Typography sx={{ color: grey[900] }} variant='h5' fontWeight="800" key={etudiant + "valeur"}>{` \u00A0${etudiant}`}</Typography>
-        </>;
-    }
+    const nbStudents = students.length;
 
     return {
         confirmDelete,
         confirmModalDelete:
-            <Modal open={ouvert} sx={{ display: "flex", alignItems: "center", justifyContent: "center", width: "100%", height: 200, margin: "auto" }}>
-                <Stack >
-                    <Stack height={20} bgcolor={colors.red[300]} sx={{ borderTopLeftRadius: 10, borderTopRightRadius: 10 }} />
-                    <Stack direction="column" spacing={4} p={4} alignItems="center" justifyContent="center" sx={{ bgcolor: colors.grey[200], borderBottomLeftRadius: 10, borderBottomRightRadius: 10 }}>
-                        <Stack spacing={2}>
-                            <Stack >
-                                <Typography variant="h6" color={colors.grey[700]} >
-                                    Vous allez supprimer: <Typography component="span" color={colors.grey[900]} variant="h6" fontWeight={800}>{nbStudents}</Typography>  étudiant{nbStudents > 1 ? 's' : ''}
-                                </Typography>
-                            </Stack>
-                        </Stack>
-                        <Stack direction="row" spacing={4}>
-                            <Button variant="contained" sx={{ bgcolor: colors.blue[100], color: colors.grey[900], py: 1, boxShadow: 'none', '&:hover': { boxShadow: 'none' } }} onClick={() => { handleClose(students); }}>
-                                Confirmer le changement
-                            </Button>
-                            <Button variant="contained" sx={{ bgcolor: colors.red[100], color: colors.grey[900], py: 1, boxShadow: 'none', '&:hover': { boxShadow: 'none' } }} onClick={() => { handleClose([]); }}>
-                                Annuler
-                            </Button>
-                        </Stack>
-                    </Stack>
-                </Stack>
-            </Modal>
+            <ModalConfirmationBase
+                ouvert={ouvert}
+                onClose={() => {
+                    handleClose([]);
+                }}
+                onConfirmer={() => {
+                    handleClose(students);
+                }}
+                titre="Confirmer la suppression"
+                ancienLabel="Étudiants sélectionnés"
+                ancienValeur={`${nbStudents} étudiant${nbStudents > 1 ? 's' : ''}`}
+                nouveauLabel="Action"
+                nouveauValeur="Suppression"
+                texteConfirmation="Confirmer la suppression"
+                texteAnnulation="Annuler"
+            />
 
     };
 }

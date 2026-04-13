@@ -14,7 +14,7 @@ import { useGridApiRef } from '@mui/x-data-grid';
 import Header from './composantsListe/Header';
 
 import type { APIConvocation } from '../../../../contracts/convocations';
-import { getConvocations, deleteConvocations, patchConvocation, postConvocationsTransfert, getConvocationsSupplementaires } from '../../../../contracts/convocations';
+import { getConvocations, deleteConvocations, patchConvocation, postConvocationsTransfert } from '../../../../contracts/convocations';
 
 
 declare module "@mui/x-data-grid" {
@@ -113,33 +113,52 @@ function MenuListeEtudiants(props: MenuListeEtudiantsProps) {
     const apiRef = useGridApiRef();
 
     const handleSaveRows = async (newRow: APIConvocation, oldRows: APIConvocation): Promise<APIConvocation> => {
-        const result = await confirm(oldRows, newRow);
-        if (result) {
-            const res = await patchConvocation(props.idSession, props.codeEpreuve, result.codeAnonymat, { rang: newRow.rang, note_quart: newRow.noteQuart ? newRow.noteQuart * 4 : undefined, code_salle: newRow.codeSalle });
-            if (res.status === 200) {
-                setRows((rows) => rows.map((row) => (row.numeroEtudiant === result.numeroEtudiant ? result : row)));
-                console.log("Convocation mise à jour avec succès :", res);
-            } else {
-                console.error("Erreur lors de la mise à jour de la convocation :", res);
-            }
+        const result = await confirm(oldRows, newRow, {
+            idSession: "Session",
+            codeEpreuve: "Epreuve",
+            numeroEtudiant: "Numero etudiant",
+            rang: "Rang",
+            codeAnonymat: "Code anonymat",
+            noteQuart: "Note",
+            codeSalle: "Salle"
+        });
+        if (!result) {
+            return oldRows;
         }
+
+        const res = await patchConvocation(props.idSession, props.codeEpreuve, result.codeAnonymat, {
+            rang: result.rang,
+            note_quart: result.noteQuart ? result.noteQuart * 4 : undefined,
+            code_salle: result.codeSalle
+        });
+
+        if (res.status === 200) {
+            setRows((rows) => rows.map((row) => (row.numeroEtudiant === result.numeroEtudiant ? result : row)));
+            console.log("Convocation mise à jour avec succès :", res);
+        } else {
+            console.error("Erreur lors de la mise à jour de la convocation :", res);
+        }
+
         return result;
     }
 
     const handleDelete = async (listeCodeAno: string[]) => {
 
         const result = await confirmDelete(listeCodeAno);
+        if (result.length === 0) {
+            return;
+        }
+
         console.log("Résultat de la confirmation de suppression :", result);
         console.log("Suppression des étudiants avec les numéros d'anonymat :", listeCodeAno);
-        if (result) {
-            const res = await deleteConvocations(props.idSession, props.codeEpreuve, listeCodeAno);
-            console.log("Réponse de l'API après suppression :", res);
-            if (res.data?.success) {
-                console.log("Convocations supprimées avec succès");
-                setRows((prevRows) => prevRows.filter((row) => !result.includes(row.codeAnonymat)));
-            } else {
-                console.error("Erreur lors de la suppression des convocations" + res);
-            }
+
+        const res = await deleteConvocations(props.idSession, props.codeEpreuve, result);
+        console.log("Réponse de l'API après suppression :", res);
+        if (res.data?.success) {
+            console.log("Convocations supprimées avec succès");
+            setRows((prevRows) => prevRows.filter((row) => !result.includes(row.codeAnonymat)));
+        } else {
+            console.error("Erreur lors de la suppression des convocations" + res);
         }
     }
 

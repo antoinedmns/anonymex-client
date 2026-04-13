@@ -1,34 +1,50 @@
 import { useState } from 'react';
-import {
-    Dialog,
-    DialogTitle,
-    DialogActions,
-    Button,
-    Modal,
-    Stack
-} from '@mui/material';
-
-
-import { colors } from "@mui/material";
-import Typography from '@mui/material/Typography';
-import CheckIcon from '@mui/icons-material/Check';
-import CloseIcon from '@mui/icons-material/Close';
-import type { JSX } from '@emotion/react/jsx-runtime';
-import { grey, red } from '@mui/material/colors';
-
 import type { APIConvocation } from '../../../../../contracts/convocations';
+import ModalConfirmationBase from '../composantsEpreuves/ModalConfirmationBase';
+
+type LibellesChampsConvocation = Partial<Record<keyof APIConvocation, string>>;
+
+function formatValeur(valeur: string | number | undefined): string {
+    if (valeur === '' || valeur === undefined) {
+        return 'N/A';
+    }
+
+    return String(valeur);
+}
+
+function getChangements(oldVal: APIConvocation | null, newVal: APIConvocation | null) {
+    if (!oldVal || !newVal) {
+        return [] as Array<{ champ: keyof APIConvocation; ancien: string; nouveau: string }>;
+    }
+
+    const keys = Object.keys(newVal) as (keyof APIConvocation)[];
+
+    return keys
+        .filter((key) => oldVal[key] !== newVal[key])
+        .map((key) => ({
+            champ: key,
+            ancien: formatValeur(oldVal[key]),
+            nouveau: formatValeur(newVal[key])
+        }));
+}
 
 export function useConfirmEdit() {
     const [ouvert, setOuvert] = useState(false);
     const [oldVal, setOldVal] = useState<APIConvocation | null>(null);
     const [newVal, setNewVal] = useState<APIConvocation | null>(null);
+    const [libellesChamps, setLibellesChamps] = useState<LibellesChampsConvocation>({});
 
-    const [resolver, setResolver] = useState<((value: APIConvocation) => void) | null>(null);
+    const [resolver, setResolver] = useState<((value: APIConvocation | null) => void) | null>(null);
 
 
-    const confirm = (oldVal: APIConvocation, newVal: APIConvocation): Promise<APIConvocation> => {
+    const confirm = (
+        oldVal: APIConvocation,
+        newVal: APIConvocation,
+        libelles?: LibellesChampsConvocation
+    ): Promise<APIConvocation | null> => {
         setOldVal(oldVal);
         setNewVal(newVal);
+        setLibellesChamps(libelles ?? {});
         setOuvert(true);
 
         return new Promise(resolve => {
@@ -36,91 +52,41 @@ export function useConfirmEdit() {
         });
     };
 
-    const handleClose = (value: APIConvocation) => {
+    const handleClose = (value: APIConvocation | null) => {
         setOuvert(false);
         resolver?.(value);
+        setResolver(null);
+        setLibellesChamps({});
     };
 
-    function changedValues<T extends Record<string, number | string | undefined>>(oldVal: T, newVal: T) {
-        const changes: Partial<T> = {};
-        const old: Partial<T> = {};
-
-        (Object.keys(newVal) as (keyof T)[]).forEach((key) => {
-            if (oldVal[key] !== newVal[key]) {
-                changes[key] = newVal[key];
-                old[key] = oldVal[key];
-            }
-        });
-
-        return { changes, old };
-    }
-
-
-    const affichageDico = (dico: APIConvocation | null): JSX.Element => {
-        if (dico === null) return <></>;
-        const change1 = changedValues(oldVal!, newVal!);
-        console.log("Changements détectés :", change1);
-
-        return <>
-            {Object.entries(dico || {}).map(([cle, valeur]) => {
-                console.log("valeur ", valeur);
-                if (change1.changes.hasOwnProperty(cle)) return (
-                    <Stack sx={{ flexDirection: "row", alignItems: "center", width: "100%" }} key={cle}>
-                        {/* <Typography sx={{ color: grey[900] }} variant="h5" fontWeight="500">{`${cle}: `}</Typography> */}
-
-                        <Typography sx={{ color: grey[900] }} variant='h5' fontWeight="800" key={cle + "valeur"}>{` \u00A0${valeur === '' || valeur === undefined ? 'N/A' : valeur}`}</Typography>
-                    </Stack>
-                );
-            })
-            }
-
-        </>;
-    }
+    const changements = getChangements(oldVal, newVal);
+    const ancienTexte = changements.length > 0
+        ? changements.map(({ champ, ancien }) => `${libellesChamps[champ] ?? String(champ)}: ${ancien}`).join(' | ')
+        : 'Aucun changement';
+    const nouveauTexte = changements.length > 0
+        ? changements.map(({ champ, nouveau }) => `${libellesChamps[champ] ?? String(champ)}: ${nouveau}`).join(' | ')
+        : 'Aucun changement';
 
 
     return {
         confirm,
         confirmModalEdit:
-            <Modal open={ouvert} sx={{ display: "flex", alignItems: "center", justifyContent: "center", width: "100%", height: 200, margin: "auto" }}>
-                <Stack >
-                    <Stack height={20} bgcolor={colors.red[300]} sx={{ borderTopLeftRadius: 10, borderTopRightRadius: 10 }} />
-                    <Stack direction="column" spacing={4} p={4} alignItems="center" justifyContent="center" sx={{ bgcolor: colors.grey[200], borderBottomLeftRadius: 10, borderBottomRightRadius: 10 }}>
-                        <Stack spacing={2}>
-                            <Stack >
-                                <Typography variant="h6" color={colors.grey[700]} >
-                                    Vous allez modifier:
-                                </Typography>
-
-                                <Stack direction="row" spacing={2} alignItems="center" alignContent={"center"} sx={{ pl: 1, pr: 1, borderRadius: 2 }}>
-                                    {affichageDico(oldVal!)}
-
-                                    <CloseIcon sx={{ color: colors.red[700] }} fontSize="large" />
-                                </Stack>
-                            </Stack>
-                            <Stack>
-
-                                <Typography variant="h6" color={colors.grey[700]} >
-                                    Par :
-                                </Typography>
-                                <Stack direction="row" spacing={2} alignItems="center" alignContent={"center"} sx={{ pl: 1, pr: 1, borderRadius: 2 }}   >
-                                    {affichageDico(newVal!)}
-
-
-                                    <CheckIcon sx={{ color: colors.green[700] }} fontSize="large" />
-                                </Stack>
-                            </Stack>
-                        </Stack>
-                        <Stack direction="row" spacing={4}>
-                            <Button variant="contained" sx={{ bgcolor: colors.blue[100], color: colors.grey[900], py: 1, boxShadow: 'none', '&:hover': { boxShadow: 'none' } }} onClick={() => { handleClose(newVal!); }}>
-                                Confirmer le changement
-                            </Button>
-                            <Button variant="contained" sx={{ bgcolor: colors.red[100], color: colors.grey[900], py: 1, boxShadow: 'none', '&:hover': { boxShadow: 'none' } }} onClick={() => { handleClose(oldVal!); }}>
-                                Annuler
-                            </Button>
-                        </Stack>
-                    </Stack>
-                </Stack>
-            </Modal>
+            <ModalConfirmationBase
+                ouvert={ouvert}
+                onClose={() => {
+                    handleClose(null);
+                }}
+                onConfirmer={() => {
+                    handleClose(newVal);
+                }}
+                titre="Confirmer la modification"
+                ancienLabel="Valeurs actuelles"
+                ancienValeur={ancienTexte}
+                nouveauLabel="Nouvelles valeurs"
+                nouveauValeur={nouveauTexte}
+                texteConfirmation="Confirmer la modification"
+                texteAnnulation="Annuler"
+            />
 
     };
 }

@@ -3,8 +3,9 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import BoutonStandard from "../../components/BoutonStantard";
 import DownloadIcon from '@mui/icons-material/Download';
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { URL_API_BASE } from "../../../../../utils/api";
+import { useEpreuvesCache } from "../../../../../contexts/EpreuvesCacheContext";
 
 
 interface PDFPageProps {
@@ -24,21 +25,50 @@ const Documents: Record<number, string> = {
 };
 
 export default function VisualiserMaterielExamen(props: PDFPageProps) {
+    const { getEpreuveByCode, patchEpreuve } = useEpreuvesCache();
+    const epreuve = getEpreuveByCode(props.codeEpreuve);
+    const listeSalles = useMemo(() => epreuve?.salles ?? [], [epreuve?.salles]);
+    const [sallesSelectionnees, setSallesSelectionnees] = useState<string[]>([]);
 
     //const [documentUrl, setDocumentUrl] = useState<string>("");
 
-    //const document = await fetch("https://..."); // 
-    const documentUrl = props.documentSelectionne === 1 ? URL_API_BASE + "/documents/bordereau.pdf"
+    useEffect(() => {
+        setSallesSelectionnees((current) => {
+            if (listeSalles.length === 0) {
+                return current.length === 0 ? current : [];
+            }
+
+            const sallesValides = current.filter((salle) => listeSalles.includes(salle));
+            if (sallesValides.length === 0) {
+                return listeSalles;
+            }
+
+            const estIdentique = sallesValides.length === current.length
+                && sallesValides.every((salle, index) => salle === current[index]);
+
+            return estIdentique ? current : sallesValides;
+        });
+    }, [listeSalles]);
+
+    useEffect(() => {
+        if (epreuve?.statut === 1) {
+            patchEpreuve(props.codeEpreuve, { statut: 2 });
+        }
+    }, [epreuve?.statut, patchEpreuve, props.codeEpreuve]);
+
+    //const document = await fetch("https://..."); //
+    const documentBaseUrl = props.documentSelectionne === 1 ? URL_API_BASE + "/documents/bordereau.pdf"
         : props.documentSelectionne === 2 ? URL_API_BASE + `/documents/session/${props.idSession}/epreuve/${props.codeEpreuve}/coupons.pdf`
-        : URL_API_BASE + "/documents/bordereau.pdf";
+            : URL_API_BASE + "/documents/bordereau.pdf";
 
-    const listeSalles = ["Aucune", "Salle 1", "Salle 2", "Salle 3"];
-
-    const [salleSelectionnee, setSalleSelectionnee] = useState<number>(0);
+    const sallesPourUrl = sallesSelectionnees.length > 0 ? sallesSelectionnees : listeSalles;
+    const sallesQuery = sallesPourUrl.length > 0 ? `?salles=${encodeURIComponent(sallesPourUrl.join(","))}` : "";
+    const documentUrl = `${documentBaseUrl}${sallesQuery}`;
 
 
     const handleDowload = () => {
         window.open(documentUrl, "_blank");
+
         const newDocumentTelecharge = [...props.documentTelecharge];
         newDocumentTelecharge[props.documentSelectionne] = true;
         props.setDocumentTelecharge(newDocumentTelecharge);
@@ -54,7 +84,7 @@ export default function VisualiserMaterielExamen(props: PDFPageProps) {
                 <Stack width={"70%"} bgcolor={colors.grey[200]} height={"100%"}>
                     <iframe
                         id="inlineFrameExample"
-                        title="Exemple de cadre intégré"
+                        title="Document"
                         width="100%"
                         height="470"
                         src={documentUrl}>
@@ -67,10 +97,22 @@ export default function VisualiserMaterielExamen(props: PDFPageProps) {
                         <Typography variant="h6" color={colors.grey[700]} mb={1}> Trier par salle </Typography>
                         <FormControl fullWidth size="small">
                             <Select
-                                value={salleSelectionnee}
+                                multiple
+                                displayEmpty
+                                disabled={listeSalles.length === 0}
+                                value={sallesSelectionnees}
                                 onChange={(e) => {
-                                    setSalleSelectionnee(e.target.value as number);
-                                    console.log(e.target.value);
+                                    const value = e.target.value;
+                                    setSallesSelectionnees(typeof value === "string" ? value.split(",") : value);
+                                }}
+                                renderValue={(selected) => {
+                                    const salles = selected as string[];
+
+                                    if (salles.length === 0 || salles.length === listeSalles.length) {
+                                        return "Toutes les salles";
+                                    }
+
+                                    return salles.join(", ");
                                 }}
                                 variant="standard"
                                 disableUnderline
@@ -89,10 +131,10 @@ export default function VisualiserMaterielExamen(props: PDFPageProps) {
                                     },
                                 }}
                             >
-                                {listeSalles.map((salle, index) => (
+                                {listeSalles.map((salle) => (
                                     <MenuItem
-                                        key={index}
-                                        value={index}
+                                        key={salle}
+                                        value={salle}
                                         sx={{
                                             fontSize: "0.9rem",
                                         }}

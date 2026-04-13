@@ -10,7 +10,7 @@ import { useState } from "react";
 
 interface EpreuveSallesCompoProps {
     salle: string;
-    sallesDispo?: { nom: string, nbEtudiants: number }[];
+    sallesDispo?: { codeSalle: string, convocations: number }[];
     nbEtudiants: number;
     nbEtuMMax: number;
     color?: string;
@@ -20,11 +20,8 @@ interface EpreuveSallesCompoProps {
 }
 
 function couleurPourcentage(nbEtudiants: number, nbEtuMMax: number, color?: string): string {
-
     const couleurs = [color + "50", color + "60", color + "65", color + "75"];
-
     const pourcent = (nbEtudiants / nbEtuMMax) * 100;
-
     return couleurs[Math.min(Math.floor(pourcent / 25), 3)];
 }
 
@@ -45,7 +42,6 @@ function EpreuveSallesCompo({ salle, nbEtudiants, nbEtuMMax, color, onTransfert,
 
     const handleClose = () => {
         setAnchorEl(null);
-
     };
 
     return (
@@ -66,17 +62,17 @@ function EpreuveSallesCompo({ salle, nbEtudiants, nbEtuMMax, color, onTransfert,
                     onClickParam={(e) => handleClickTransfert(e as React.MouseEvent<HTMLElement>)}
                     sx={{ bgcolor: color + "60", '&:hover': { bgcolor: color + "AF" } }}
                     children={<SyncAltIcon />}
-                    tooltip="Transfert"
+                    tooltip="Transférer"
                 />
                 <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
                     {sallesDispo?.map((salleDispo) => (
-                        <MenuItem key={salleDispo.nom} onClick={() => handleSelectTransfert(salleDispo.nom)}>
-                            {salleDispo.nom}
+                        <MenuItem key={salleDispo.codeSalle} onClick={() => handleSelectTransfert(salleDispo.codeSalle)}>
+                            {salleDispo.codeSalle}
                         </MenuItem>
                     ))}
                 </Menu>
-                <IconRondV2 onClickParam={() => onAjouter(salle)} sx={{ bgcolor: color + "60", '&:hover': { bgcolor: color + "AF" } }} children={<Add />} tooltip="Ajouter étudiants" />
-                <IconRondV2 onClickParam={() => onDetails(salle)} sx={{ bgcolor: color + "60", '&:hover': { bgcolor: color + "AF" } }} children={<MenuIcon />} tooltip="Détails" />
+                {/*<IconRondV2 onClickParam={() => onAjouter(salle)} sx={{ bgcolor: color + "60", '&:hover': { bgcolor: color + "AF" } }} children={<Add />} tooltip="Ajouter étudiants" />*/}
+                <IconRondV2 onClickParam={() => onDetails(salle)} sx={{ bgcolor: color + "60", '&:hover': { bgcolor: color + "AF" } }} children={<MenuIcon />} tooltip="Liste des étudiants" />
             </Stack>
 
         </Stack >

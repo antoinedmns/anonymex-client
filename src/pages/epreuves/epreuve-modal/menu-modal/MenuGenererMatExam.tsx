@@ -16,9 +16,9 @@ interface MenuGenererMatExamProps {
 
 function MenuGenererMatExam(props: MenuGenererMatExamProps) {
 
-    const [afficherMenu, setAfficherMenu] = useState<boolean>(true);
-    const [pdfPage, setPdfPage] = useState<boolean>(false);
-    const [documentSelectionne, setDocumentSelectionne] = useState<1 | 2 | 3>(1);
+    //const [afficherMenu, setAfficherMenu] = useState<boolean>(true);
+    const [pdfPage, setPdfPage] = useState<boolean>(true);
+    const [documentSelectionne, setDocumentSelectionne] = useState<1 | 2 | 3>(2);
     const [documentTelecharge, setDocumentTelecharge] = useState<boolean[]>([false, false, false]);
 
     const handleClickBordereaux = () => {
