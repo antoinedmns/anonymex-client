@@ -32,7 +32,7 @@ export default function EpreuvesPage(): ReactElement {
 
     // Filtres et tri
     const [typeEpreuve, setTypeEpreuve] = useState<'passees' | 'aVenir'>
-        (listeEpreuves.epreuvesAvenir.length > 0 ? 'aVenir' : 'passees');
+        ('aVenir');
     const [filtreStatut, setFiltreStatut] = useState<number | null>(null); // null => tout afficher
     //const [optionTri] = useState<SortOption>("chronologique");
 
@@ -172,7 +172,7 @@ export default function EpreuvesPage(): ReactElement {
                     </Box>
                     <Box sx={{ width: '35%' }}>
                         { /* FILTRES ET OPTIONS DE TRI */}
-                        {listeEpreuves.epreuvesAvenir.length > 0 && listeEpreuves.epreuvesPassees.length > 0 && (
+                        {true && (
                             <Stack spacing={2} paddingBottom={2} paddingTop={3}>
                                 <Typography variant="h5" fontWeight={700}>Afficher</Typography>
                                 <EpreuvesFiltreCard couleur={green[300]} titre="Épreuves à venir" nombre={listeEpreuves.epreuvesAvenir.length} selectionne={typeEpreuve === 'aVenir'} onClick={() => handleTypeEpreuveChange('aVenir')} />
